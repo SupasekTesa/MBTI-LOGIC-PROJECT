@@ -1,228 +1,272 @@
 import streamlit as st
 
 # ==========================================
-# PAGE CONFIGURATION
+# PAGE CONFIGURATION & STYLING
 # ==========================================
 st.set_page_config(
-    page_title="ระบบวัดแววเลือกคณะและอาชีพด้วยตรรกศาสตร์",
+    page_title="ระบบวัดแวว MBTI + ตรรกศาสตร์การศึกษาต่อ",
     page_icon="🎓",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# Custom CSS Styling
 st.markdown("""
 <style>
     .main-title {
-        font-size: 2.2rem;
+        font-size: 2rem;
         color: #1E3A8A;
         text-align: center;
         font-weight: bold;
-        margin-bottom: 0.5rem;
     }
     .sub-title {
-        font-size: 1.1rem;
+        font-size: 1rem;
         color: #4B5563;
         text-align: center;
         margin-bottom: 2rem;
     }
-    .result-card {
-        background-color: #F3F4F6;
+    .card {
+        background-color: #F8FAFC;
+        border: 1px solid #E2E8F0;
         padding: 1.5rem;
-        border-radius: 10px;
-        border-left: 6px solid #2563EB;
-        margin-top: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
     }
     .logic-box {
         background-color: #EFF6FF;
-        border: 1px solid #BFDBFE;
+        border-left: 5px solid #2563EB;
         padding: 1rem;
-        border-radius: 8px;
+        border-radius: 6px;
         font-family: monospace;
         color: #1E40AF;
-        margin-top: 0.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# HEADER
-# ==========================================
-st.markdown('<div class="main-title">🎓 ระบบประมวลผลตรรกศาสตร์เพื่อการเลือกคณะและอาชีพ</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">โครงงานคณิตศาสตร์บูรณาการ: การประยุกต์ใช้ตรรกศาสตร์ + MBTI + ปัจจัยทุนทรัพย์</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">🎓 ระบบวัดแววเลือกคณะและอาชีพด้วยตรรกศาสตร์</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">โครงงานคณิตศาสตร์บูรณาการ: ตรรกศาสตร์ + MBTI + ความสนใจ + เป้าหมายอาชีพ + ทุนการศึกษา</div>', unsafe_allow_html=True)
 
-st.divider()
+# Initialize Session State for Multi-step Form
+if "step" not in st.session_state:
+    st.session_state.step = 1
+
+# Progress Bar
+progress = (st.session_state.step - 1) / 3
+st.progress(progress)
+st.caption(f"ขั้นตอนที่ {st.session_state.step} จาก 4")
 
 # ==========================================
-# FORM SECTION (INPUT)
+# STEP 1: MBTI ASSESSMENT
 # ==========================================
-with st.form(key="mbti_assessment_form"):
-    st.subheader("📋 แบบสอบถามวัดแววและความสนใจ")
+if st.session_state.step == 1:
+    st.subheader("🧠 ส่วนที่ 1: แบบประเมินบุคลิกภาพ (MBTI)")
+    st.info("💡 สามารถนำคำถาม MBTI ที่คุณคิดเองมาแก้ไขในโค้ดตรงจุดนี้ได้เลยครับ")
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("### 🧠 1. แบบประเมินบุคลิกภาพ (MBTI)")
+    with st.form("mbti_form"):
+        # --- มิติ E / I ---
+        st.markdown("#### 1. การเข้าสังคมและการรับพลังงาน (E vs I)")
+        q_ei_1 = st.radio("1.1 คำถาม E/I ข้อที่ 1: [พิมพ์คำถามของคุณตรงนี้]", 
+                          ["ตัวเลือก A (แนวทาง E): ชอบทำกิจกรรมกลุ่ม / ออกไปเจอผู้คน", 
+                           "ตัวเลือก B (แนวทาง I): ชอบชาร์จพลังคนเดียว / อยู่ในพื้นที่เงียบๆ"], key="q_ei_1")
         
-        q1 = st.radio(
-            "1.1 การเติมพลังชีวิตและการเข้าสังคม:",
-            ["พบปะพูดคุยกับผู้คน ออกไปทำกิจกรรมกลุ่ม (E - Extraversion)",
-             "ชอบใช้เวลาอยู่กับตัวเอง ทำกิจกรรมในพื้นที่เงียบๆ (I - Introversion)"]
-        )
+        q_ei_2 = st.radio("1.2 คำถาม E/I ข้อที่ 2: [พิมพ์คำถามของคุณตรงนี้]", 
+                          ["ตัวเลือก A (แนวทาง E): ชอบพูดคุยและแสดงความเห็นทันที", 
+                           "ตัวเลือก B (แนวทาง I): ชอบคิดทบทวนเงียบๆ ก่อนพูด"], key="q_ei_2")
         
-        q2 = st.radio(
-            "1.2 วิธีการรับรู้ข้อมูลและการเรียนรู้:",
-            ["เน้นข้อมูลข้อเท็จจริง สิ่งที่สัมผัสและจับต้องได้ (S - Sensing)",
-             "เน้นการมองภาพรวม จินตนาการ และความเป็นไปได้ใหม่ๆ (N - Intuition)"]
-        )
+        st.divider()
+        # --- มิติ S / N ---
+        st.markdown("#### 2. การรับรู้และรับข้อมูล (S vs N)")
+        q_sn_1 = st.radio("2.1 คำถาม S/N ข้อที่ 1: [พิมพ์คำถามของคุณตรงนี้]", 
+                          ["ตัวเลือก A (แนวทาง S): เน้นรายละเอียด ข้อเท็จจริงที่เห็นชัดเจน", 
+                           "ตัวเลือก B (แนวทาง N): เน้นภาพรวม จินตนาการ ความเป็นไปได้"], key="q_sn_1")
         
-        q3 = st.radio(
-            "1.3 หลักการในการตัดสินใจ:",
-            ["ใช้เหตุผล ตรรกะ ข้อเท็จจริง และความสมเหตุสมผล (T - Thinking)",
-             "ใช้ความรู้สึก ค่านิยม ความเข้าอกเข้าใจ และผลกระทบต่อบุคคล (F - Feeling)"]
-        )
+        st.divider()
+        # --- มิติ T / F ---
+        st.markdown("#### 3. การตัดสินใจ (T vs F)")
+        q_tf_1 = st.radio("3.1 คำถาม T/F ข้อที่ 1: [พิมพ์คำถามของคุณตรงนี้]", 
+                          ["ตัวเลือก A (แนวทาง T): ใช้ตรรกะ เหตุผล ความถูกต้องเป็นหลัก", 
+                           "ตัวเลือก B (แนวทาง F): ใช้ความรู้สึก ความเข้าใจ ผลกระทบต่อคนเป็นหลัก"], key="q_tf_1")
         
-        q4 = st.radio(
-            "1.4 รูปแบบการดำเนินชีวิต:",
-            ["ชอบความมีระเบียบ วางแผนชัดเจน มีโครงสร้างแน่นอน (J - Judging)",
-             "ชอบความยืดหยุ่น ปรับเปลี่ยนตามสถานการณ์ สบายๆ (P - Perceiving)"]
-        )
+        st.divider()
+        # --- มิติ J / P ---
+        st.markdown("#### 4. รูปแบบการใช้ชีวิต (J vs P)")
+        q_jp_1 = st.radio("4.1 คำถาม J/P ข้อที่ 1: [พิมพ์คำถามของคุณตรงนี้]", 
+                          ["ตัวเลือก A (แนวทาง J): ชอบวางแผนล่วงหน้า มีระเบียบแบบแผน", 
+                           "ตัวเลือก B (แนวทาง P): ยืดหยุ่น พร้อมปรับเปลี่ยนตามสถานการณ์"], key="q_jp_1")
 
-    with col2:
-        st.markdown("### 📚 2. วิชา ความสนใจ และกิจกรรม")
-        
+        next_1 = st.form_submit_button("ถัดไป: ไปยังส่วนความสนใจและความถนัด ➔", use_container_width=True)
+        if next_1:
+            st.session_state.step = 2
+            st.rerun()
+
+# ==========================================
+# STEP 2: INTERESTS & HOBBIES
+# ==========================================
+elif st.session_state.step == 2:
+    st.subheader("📚 ส่วนที่ 2: ความสนใจ วิชาที่ชอบ และงานอดิเรก")
+    
+    with st.form("interests_form"):
         subject = st.selectbox(
-            "2.1 กลุ่มรายวิชาที่คุณชื่นชอบมากที่สุด:",
+            "1. กลุ่มวิชาที่คุณชื่นชอบหรือทำได้ดีที่สุด: [แก้ไขตัวเลือกตรงนี้ได้]",
             [
-                "วิชาคำนวณ ตรรกะ และเทคโนโลยี (คณิตศาสตร์, ฟิสิกส์, คอมพิวเตอร์)",
-                "วิชาทดลองและธรรมชาติวิทยา (ชีววิทยา, เคมี, วิทยาศาสตร์สุขภาพ)",
-                "วิชาภาษา การสื่อสาร และสังคม (ภาษาไทย, อังกฤษ, สังคมศึกษา)",
-                "วิชาสร้างสรรค์และศิลปะ (ศิลปะ, ออกแบบ, ดนตรี, สื่อ)"
+                "กลุ่มวิชาคำนวณและเทคโนโลยี (คณิตศาสตร์, ฟิสิกส์, คอมพิวเตอร์)",
+                "กลุ่มวิชาทดลองและวิทยาศาสตร์สุขภาพ (เคมี, ชีววิทยา)",
+                "กลุ่มวิชาภาษา การสื่อสาร และสังคม (ภาษาไทย, อังกฤษ, สังคม)",
+                "กลุ่มวิชาสร้างสรรค์และศิลปะ (ศิลปะ, ออกแบบ, ดนตรี, สื่อดิจิทัล)"
             ]
         )
         
         hobby = st.selectbox(
-            "2.2 กิจกรรมหรืองานอดิเรกที่ชอบทำ:",
+            "2. กิจกรรมหรืองานอดิเรกที่ชอบทำในเวลาว่าง: [แก้ไขตัวเลือกตรงนี้ได้]",
             [
-                "วิเคราะห์ วางแผน แก้ปัญหาซับซ้อน หรือเล่นเกมกลยุทธ์",
-                "ช่วยเหลือผู้คน งานจิตอาสา รับฟังและปรึกษาปัญหา",
-                "สร้างสรรค์งานศิลปะ วาดภาพ ออกแบบ ตัดต่อ ทำคอนเทนต์",
-                "ลงมือปฏิบัติจริง งานทดลอง งานช่าง ส่องกล้องประดิษฐ์สิ่งของ"
+                "วิเคราะห์ วางแผน เล่นเกมกลยุทธ์ แก้โจทย์ซับซ้อน",
+                "ช่วยเหลือผู้อื่น ทำงานจิตอาสา รับฟังปัญหาเพื่อน",
+                "วาดรูป แต่งเพลง เขียนคอนเทนต์ ออกแบบกราฟิก",
+                "ประดิษฐ์สิ่งของ ซ่อมแซม ทดลองสิ่งใหม่ๆ ลงมือทำจริง"
             ]
         )
         
-        st.markdown("### 💰 3. ปัจจัยด้านทุนการศึกษา")
-        
-        capital = st.radio(
-            "3.1 เงื่อนไขและข้อจำกัดด้านทุนทรัพย์ในการศึกษาต่อ:",
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            back_2 = st.form_submit_button("⬅ ย้อนกลับ")
+        with col_b2:
+            next_2 = st.form_submit_button("ถัดไป: ไปยังเป้าหมายและทุนทรัพย์ ➔")
+            
+        if back_2:
+            st.session_state.step = 1
+            st.rerun()
+        if next_2:
+            st.session_state.subject_choice = subject
+            st.session_state.hobby_choice = hobby
+            st.session_state.step = 3
+            st.rerun()
+
+# ==========================================
+# STEP 3: GOALS & CAPITAL CONSTRAINTS
+# ==========================================
+elif st.session_state.step == 3:
+    st.subheader("🎯 ส่วนที่ 3: เป้าหมายอาชีพและเงื่อนไขทุนทรัพย์")
+    
+    with st.form("goals_form"):
+        career_goal = st.radio(
+            "1. เป้าหมายลักษณะงานที่คุณอยากได้มากที่สุดในอนาคต:",
             [
-                "มีข้อจำกัดสูง (ต้องการคณะที่มีทุนเต็มจำนวน / จบแล้วมีงานรองรับทันที / คืนทุนไว)",
-                "ไม่มีข้อจำกัด หรือมีทุนทรัพย์ปานกลางถึงสูง (สามารถรับภาระค่าธรรมเนียมการศึกษาทั่วไปได้)"
+                "เน้นความมั่นคงสูง มีสวัสดิการดี (เช่น ข้าราชการ, งานสถาบันรัฐ, พยาบาล)",
+                "เน้นการสร้างรายได้เร็ว คืนทุนไว คุ้มค่าตอบแทน (เช่น สายเทค, สื่อการตลาด)",
+                "เน้นอิสระในการทำงาน มีความยืดหยุ่นสูง (เช่น ฟรีแลนซ์, ครีเอทีฟ, ธุรกิจส่วนตัว)"
             ]
         )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    submit_button = st.form_submit_button(label="🚀 ประมวลผลตรรกศาสตร์เพื่อหาคณะที่ใช่", use_container_width=True)
+        
+        capital_status = st.radio(
+            "2. เงื่อนไขและข้อจำกัดด้านทุนทรัพย์ในการศึกษาต่อ:",
+            [
+                "มีข้อจำกัดสูง (ต้องการทุนเต็มจำนวน / คณะที่มีทุนรองรับ / หรือจบแล้วทำงานได้ทันที)",
+                "ไม่มีข้อจำกัด หรือมีทุนทรัพย์ปานกลางถึงสูง (สามารถรับภาระค่าเทอมทั่วไปได้)"
+            ]
+        )
+        
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            back_3 = st.form_submit_button("⬅ ย้อนกลับ")
+        with col_b2:
+            submit_all = st.form_submit_button("🚀 ประมวลผลตรรกศาสตร์")
+            
+        if back_3:
+            st.session_state.step = 2
+            st.rerun()
+        if submit_all:
+            st.session_state.career_goal = career_goal
+            st.session_state.capital_status = capital_status
+            st.session_state.step = 4
+            st.rerun()
 
 # ==========================================
-# LOGIC & PROCESSING SECTION
+# STEP 4: LOGIC PROCESSING & RESULTS
 # ==========================================
-if submit_button:
-    # 1. Convert MBTI Inputs to Logical Propositions (True / False)
-    m1 = True if "E - Extraversion" in q1 else False  # T = E, F = I
-    m2 = True if "S - Sensing" in q2 else False       # T = S, F = N
-    m3 = True if "T - Thinking" in q3 else False      # T = T, F = F
-    m4 = True if "J - Judging" in q4 else False       # T = J, F = P
+elif st.session_state.step == 4:
+    st.subheader("📊 ส่วนที่ 4: ผลการวิเคราะห์ด้วยตรรกศาสตร์")
     
-    mbti_type = f"{'E' if m1 else 'I'}{'S' if m2 else 'N'}{'T' if m3 else 'F'}{'J' if m4 else 'P'}"
+    # 1. Evaluate MBTI Propositions
+    m1_score = 0
+    if "แนวทาง E" in st.session_state.get("q_ei_1", ""): m1_score += 1
+    if "แนวทาง E" in st.session_state.get("q_ei_2", ""): m1_score += 1
+    m1 = True if m1_score >= 1 else False  # T = E, F = I
     
-    # 2. Convert Subject Inputs
+    m2 = False if "แนวทาง N" in st.session_state.get("q_sn_1", "") else True # T = S, F = N
+    m3 = True if "แนวทาง T" in st.session_state.get("q_tf_1", "") else False  # T = T, F = F
+    m4 = True if "แนวทาง J" in st.session_state.get("q_jp_1", "") else False  # T = J, F = P
+    
+    mbti_result = f"{'E' if m1 else 'I'}{'S' if m2 else 'N'}{'T' if m3 else 'F'}{'J' if m4 else 'P'}"
+    
+    # 2. Get Saved Inputs
+    subject = st.session_state.get("subject_choice", "")
+    hobby = st.session_state.get("hobby_choice", "")
+    goal = st.session_state.get("career_goal", "")
+    capital = st.session_state.get("capital_status", "")
+    
+    # 3. Proposition Mapping
     a1 = "คำนวณ" in subject
     a2 = "ชีววิทยา" in subject
     a3 = "ภาษา" in subject
     a4 = "สร้างสรรค์" in subject
     
-    # 3. Convert Hobby Inputs
-    h1 = "วิเคราะห์" in hobby
-    h2 = "ช่วยเหลือ" in hobby
-    h3 = "สร้างสรรค์" in hobby
-    h4 = "ลงมือปฏิบัติ" in hobby
+    g_stable = "ความมั่นคงสูง" in goal
+    g_fast_money = "สร้างรายได้เร็ว" in goal
+    g_freedom = "เน้นอิสระ" in goal
     
-    # 4. Convert Capital Constraint
-    c1 = "มีข้อจำกัดสูง" in capital  # T = ทุนน้อย, F = ทุนพอเพียง
+    c1 = "มีข้อจำกัดสูง" in capital  # T = ทุนน้อย
     
-    # ==========================================
-    # LOGICAL RULES EVALUATION
-    # ==========================================
-    st.divider()
-    st.subheader("🎯 ผลการวิเคราะห์และประมวลผลทางตรรกศาสตร์")
+    # 4. Rules Evaluation
+    rule_tech = (m3 and a1 and g_fast_money) or (a1 and c1)
+    rule_health = (a2 or g_stable) and c1
+    rule_creative = (a4 or g_freedom) and (not c1)
     
-    # Logical Rule Formulas
-    rule1 = (m3 and a1) and c1                   # Rule 1: Tech / Math + High Capital Constraint
-    rule2 = ((not m3) or h2 or a2) and c1        # Rule 2: Healthcare / Caring + High Capital Constraint
-    rule3 = (a4 or h3) and (not c1)              # Rule 3: Creative / Design + Sufficient Capital
-    rule4 = (m1 or a3) and (not c1)              # Rule 4: Business / Arts + Sufficient Capital
+    st.markdown(f"### 👤 ผลการประเมิน MBTI ของคุณ: **{mbti_result}**")
     
-    st.markdown(f"### 👤 บุคลิกภาพของคุณ: **{mbti_type}**")
+    col_r1, col_r2 = st.columns([3, 2])
     
-    res_col1, res_col2 = st.columns([3, 2])
-    
-    with res_col1:
-        st.markdown('<div class="result-card">', unsafe_allow_html=True)
-        
-        if rule1:
-            st.markdown("#### 🎓 คณะและสาขาวิชาที่แนะนำ:")
-            st.markdown("- **คณะวิทยาการคอมพิวเตอร์ / เทคโนโลยีสารสนเทศ (IT) / วิศวกรรมซอฟต์แวร์**")
-            st.markdown("- **คณะครุศาสตร์ / ศึกษาศาสตร์ (สาขาคณิตศาสตร์ หรือ คอมพิวเตอร์)**")
-            st.markdown("#### 💼 แนวทางอาชีพ:")
-            st.markdown("- นักพัฒนาซอฟต์แวร์ (Software Developer), นักวิเคราะห์ข้อมูล (Data Analyst), ครูทุนรัฐบาล")
-            st.markdown("#### 💡 คำแนะนำด้านทุนการศึกษา:")
-            st.markdown("เน้นคณะที่มีโครงการเรียนร่วมกับสถานประกอบการ (Co-op) หรือสมัครทุนครูคืนถิ่น และทุนบริษัทเทคโนโลยี คืนทุนไว โอกาสได้งานทำสูง")
-            
-        elif rule2:
-            st.markdown("#### 🎓 คณะและสาขาวิชาที่แนะนำ:")
-            st.markdown("- **คณะพยาบาลศาสตร์ / คณะสหเวชศาสตร์ (กายภาพบำบัด, รังสีเทคนิค)**")
-            st.markdown("- **คณะสาธารณสุขศาสตร์ / การแพทย์แผนไทย**")
-            st.markdown("#### 💼 แนวทางอาชีพ:")
+    with col_r1:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        if rule_tech:
+            st.markdown("#### 🎓 คณะและสาขาที่แนะนำ:")
+            st.markdown("- **คณะวิทยาการคอมพิวเตอร์ / วิศวกรรมซอฟต์แวร์ / IT**")
+            st.markdown("- **คณะครุศาสตร์ (สาขาคณิตศาสตร์ / คอมพิวเตอร์)**")
+            st.markdown("#### 💼 อาชีพที่สอดคล้องกับเป้าหมาย:")
+            st.markdown("- Software Developer, Data Analyst, ครูทุนรัฐบาล")
+            st.markdown("#### 💡 การวิเคราะห์ทุนและเป้าหมาย:")
+            st.markdown("ตอบโจทย์กลุ่มที่ต้องการสร้างรายได้เร็ว คืนทุนไว หรือต้องการทุนเรียนฟรีที่มีงานรองรับแน่นอน")
+        elif rule_health:
+            st.markdown("#### 🎓 คณะและสาขาที่แนะนำ:")
+            st.markdown("- **คณะพยาบาลศาสตร์ / คณะสหเวชศาสตร์ / คณะสาธารณสุขศาสตร์**")
+            st.markdown("- **คณะครุศาสตร์ (วิชาชีพเฉพาะ)**")
+            st.markdown("#### 💼 อาชีพที่สอดคล้องกับเป้าหมาย:")
             st.markdown("- พยาบาลวิชาชีพ, นักเทคนิคการแพทย์, เจ้าหน้าที่สาธารณสุข")
-            st.markdown("#### 💡 คำแนะนำด้านทุนการศึกษา:")
-            st.markdown("แนะนำยื่นขอทุนผูกพันจากโรงพยาบาลรัฐ/เอกชน หรือทุนสถาบันการศึกษา ซึ่งมักให้ทุนเรียนฟรีพร้อมเบี้ยเลี้ยง และเข้าทำงานได้ทันทีหลังจบ")
-            
-        elif rule3:
-            st.markdown("#### 🎓 คณะและสาขาวิชาที่แนะนำ:")
-            st.markdown("- **คณะสถาปัตยกรรมศาสตร์ / คณะมัณฑนศิลป์ / คณะศิลปกรรมศาสตร์**")
-            st.markdown("- **คณะนิเทศศาสตร์ / สื่อดิจิทัลและการสื่อสาร**")
-            st.markdown("#### 💼 แนวทางอาชีพ:")
-            st.markdown("- UX/UI Designer, ครีเอทีฟ (Creative Director), สถาปนิก, นักประดิษฐ์คอนเทนต์")
-            st.markdown("#### 💡 คำแนะนำด้านทุนการศึกษา:")
-            st.markdown("เนื่องจากไม่มีข้อจำกัดด้านทุนทรัพย์ สามารถเลือกเรียนในหลักสูตรที่เน้นภาคปฏิบัติและอุปกรณ์เฉพาะทางได้อย่างเต็มที่")
-            
+            st.markdown("#### 💡 การวิเคราะห์ทุนและเป้าหมาย:")
+            st.markdown("ตอบโจทย์ความมั่นคงสูง และมีทุนผูกพันจากโรงพยาบาลรองรับ เหมาะสำหรับผู้มีข้อจำกัดด้านทุนทรัพย์")
         else:
-            st.markdown("#### 🎓 คณะและสาขาวิชาที่แนะนำ:")
-            st.markdown("- **คณะบริหารธุรกิจ / คณะพาณิชยศาสตร์และการบัญชี**")
-            st.markdown("- **คณะมนุษยศาสตร์ / อักษรศาสตร์ / รัฐศาสตร์**")
-            st.markdown("#### 💼 แนวทางอาชีพ:")
-            st.markdown("- นักการตลาดดิจิทัล, นักการทูต, ผู้ประกอบการ, นักบริหารทรัพยากรบุคคล (HR)")
-            st.markdown("#### 💡 คำแนะนำด้านทุนการศึกษา:")
-            st.markdown("สามารถเลือกต่อยอดในหลักสูตรนานาชาติ หรือคณะสายบริหารเพื่อเพิ่มโอกาสในการทำงานองค์กรข้ามชาติ")
-            
+            st.markdown("#### 🎓 คณะและสาขาที่แนะนำ:")
+            st.markdown("- **คณะสถาปัตยกรรมศาสตร์ / คณะนิเทศศาสตร์ / คณะบริหารธุรกิจ**")
+            st.markdown("#### 💼 อาชีพที่สอดคล้องกับเป้าหมาย:")
+            st.markdown("- UX/UI Designer, ครีเอทีฟดิเรกเตอร์, ผู้ประกอบการ, การตลาดดิจิทัล")
+            st.markdown("#### 💡 การวิเคราะห์ทุนและเป้าหมาย:")
+            st.markdown("ตอบโจทย์การทำงานที่ยืดหยุ่น มีอิสระสูง และสามารถต่อยอดทักษะเฉพาะทางได้อย่างหลากหลาย")
         st.markdown('</div>', unsafe_allow_html=True)
         
-    with res_col2:
-        st.markdown("#### 📐 สมการตรรกศาสตร์ที่ใช้ประมวลผล (Logical Proof)")
-        st.markdown("การแปลงค่าเป็นประพจน์จริง/เท็จ:")
-        
+    with col_r2:
+        st.markdown("#### 📐 Proof log (ประพจน์ทางตรรกศาสตร์)")
         st.markdown(f"""
         <div class="logic-box">
-        <b>ตัวแปรประพจน์:</b><br>
-        • M3 (Thinking) = {m3}<br>
+        <b>ค่าจริงของประพจน์:</b><br>
+        • MBTI = {mbti_result}<br>
         • A1 (วิชาคำนวณ) = {a1}<br>
-        • A2 (วิชาชีวะ) = {a2}<br>
+        • G_stable (มั่นคง) = {g_stable}<br>
+        • G_fast (ได้เงินเร็ว) = {g_fast_money}<br>
         • C1 (ทุนน้อย) = {c1}<br><br>
-        <b>ผลการคำนวณตามกฎตรรกศาสตร์:</b><br>
-        Rule1 = (M3 ∧ A1) ∧ C1 → {rule1}<br>
-        Rule2 = ((¬M3) ∨ H2 ∨ A2) ∧ C1 → {rule2}<br>
-        Rule3 = (A4 ∨ H3) ∧ (¬C1) → {rule3}<br>
-        Rule4 = (M1 ∨ A3) ∧ (¬C1) → {rule4}
+        <b>ประมวลผลกฎตรรกะ:</b><br>
+        • Rule Tech = {rule_tech}<br>
+        • Rule Health = {rule_health}<br>
+        • Rule Creative = {rule_creative}
         </div>
         """, unsafe_allow_html=True)
+        
+    if st.button("🔄 ทำแบบสอบถามใหม่อีกครั้ง", use_container_width=True):
+        st.session_state.step = 1
+        st.rerun()
