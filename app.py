@@ -1,5 +1,5 @@
 import streamlit as st
-from questions import COGNITIVE_QUESTIONS  # ดึงคลังคำถามมาจากไฟล์ questions.py
+from questions import COGNITIVE_QUESTIONS, SUBJECT_QUESTIONS, HOBBY_QUESTIONS, GOAL_QUESTIONS
 
 # ==========================================
 # 1. PAGE CONFIG & STYLING (ปรับแต่งความสวยงาม)
