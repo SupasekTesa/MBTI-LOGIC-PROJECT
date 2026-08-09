@@ -26,7 +26,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">🎓 ระบบวัดแวว Cognitive Functions & ตรรกศาสตร์เพื่อการศึกษาต่อ</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">🎓 ระบบวัดแวว MBTI & ตรรกศาสตร์เพื่อการศึกษาต่อ</div>', unsafe_allow_html=True)
 
 if "step" not in st.session_state:
     st.session_state.step = 1
