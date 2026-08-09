@@ -1,5 +1,4 @@
 import streamlit as st
-# ดึงคลังคำถามทั้งหมดมาจากไฟล์ questions.py
 from questions import (
     COGNITIVE_QUESTIONS, 
     SUBJECT_QUESTIONS, 
@@ -8,7 +7,7 @@ from questions import (
 )
 
 # ==========================================
-# 1. PAGE CONFIG & STYLING
+# 1. ตั้งค่าหน้าเว็บ & CSS สไตล์ Dashboard
 # ==========================================
 st.set_page_config(
     page_title="ระบบวัดแววด้วย Cognitive Functions & ตรรกศาสตร์",
@@ -22,14 +21,14 @@ st.markdown("""
     .header-box {
         background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
         color: white;
-        padding: 2rem 1.5rem;
+        padding: 1.8rem 1.5rem;
         border-radius: 16px;
         text-align: center;
         box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
     }
-    .header-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .header-sub { font-size: 1.1rem; opacity: 0.9; }
+    .header-title { font-size: 2rem; font-weight: 800; margin-bottom: 0.3rem; }
+    .header-sub { font-size: 1rem; opacity: 0.9; }
     .custom-card {
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
@@ -65,26 +64,30 @@ st.markdown("""
 st.markdown("""
 <div class="header-box">
     <div class="header-title">🎓 ระบบประมวลผลตรรกศาสตร์เพื่อการศึกษาต่อ</div>
-    <div class="header-sub">โครงงานคณิตศาสตร์บูรณาการ: Cognitive Functions 80 ข้อ + ความชอบ/งานอดิเรก + เงื่อนไขทุนทรัพย์</div>
+    <div class="header-sub">โครงงานคณิตศาสตร์บูรณาการ: Cognitive Functions + ความชอบ + ทุนการศึกษา</div>
 </div>
 """, unsafe_allow_html=True)
 
+# ตัวแปรจัดการขั้นตอน (Step Management)
+TOTAL_STEPS = 5
 if "step" not in st.session_state:
     st.session_state.step = 1
 
+# แสดงหลอดความคืบหน้า (Progress Bar)
+progress_percentage = min((st.session_state.step - 1) / (TOTAL_STEPS - 1), 1.0)
+st.progress(progress_percentage)
+st.caption(f"📌 ความคืบหน้า: ขั้นตอนที่ {min(st.session_state.step, TOTAL_STEPS - 1)} จาก {TOTAL_STEPS - 1}")
+st.divider()
+
+
 # ==========================================
-# 2. STEP 1: ทำแบบสอบถามทั้งหมด
+# STEP 1: ประเมิน Cognitive Functions (80 ข้อ)
 # ==========================================
 if st.session_state.step == 1:
-    st.subheader("📋 แบบสอบถามประเมินตนเอง")
+    st.subheader("🧠 ส่วนที่ 1: แบบประเมิน Cognitive Functions (80 ข้อ)")
+    st.info("โปรดอ่านข้อความและเลือกระดับความตรงกับตัวคุณ (ใช่ / ไม่ใช่)")
     
-    with st.form("main_form"):
-        # ----------------------------------------------------
-        # ส่วนที่ 1: Cognitive Functions (80 ข้อ)
-        # ----------------------------------------------------
-        st.markdown("### 🧠 1. แบบประเมิน Cognitive Functions (80 ข้อ)")
-        st.caption("โปรดเลือก 'ใช่' หากตรงกับความเป็นจริงของคุณ หรือ 'ไม่ใช่' หากไม่ตรง")
-        
+    with st.form("form_step1"):
         user_cog_responses = {}
         for q in COGNITIVE_QUESTIONS:
             user_cog_responses[q["id"]] = {
@@ -99,10 +102,21 @@ if st.session_state.step == 1:
             }
             st.divider()
 
-        # ----------------------------------------------------
-        # ส่วนที่ 2: ความถนัด/วิชาที่ชอบ (6 ข้อ)
-        # ----------------------------------------------------
-        st.markdown("### 📚 2. วิชาความถนัดและความชอบ")
+        btn_next = st.form_submit_button("ถัดไป: เลือกวิชาความถนัด ➔", use_container_width=True)
+        if btn_next:
+            st.session_state.user_cog_responses = user_cog_responses
+            st.session_state.step = 2
+            st.rerun()
+
+
+# ==========================================
+# STEP 2: ประเมินวิชาความถนัดและความชอบ
+# ==========================================
+elif st.session_state.step == 2:
+    st.subheader("📚 ส่วนที่ 2: วิชาความถนัดและความชอบ")
+    st.info("เลือกระดับความสนใจในกลุ่มรายวิชาต่างๆ")
+    
+    with st.form("form_step2"):
         user_sub_responses = {}
         for q in SUBJECT_QUESTIONS:
             user_sub_responses[q["id"]] = {
@@ -117,10 +131,26 @@ if st.session_state.step == 1:
             }
             st.divider()
 
-        # ----------------------------------------------------
-        # ส่วนที่ 3: งานอดิเรก/สไตล์การทำงาน (5 ข้อ)
-        # ----------------------------------------------------
-        st.markdown("### 🎨 3. งานอดิเรกและสไตล์ที่ชอบ")
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.form_submit_button("⬅ ย้อนกลับ"):
+                st.session_state.step = 1
+                st.rerun()
+        with col_b2:
+            if st.form_submit_button("ถัดไป: ประเมินงานอดิเรก ➔", use_container_width=True):
+                st.session_state.user_sub_responses = user_sub_responses
+                st.session_state.step = 3
+                st.rerun()
+
+
+# ==========================================
+# STEP 3: ประเมินงานอดิเรกและสไตล์ที่ชอบ
+# ==========================================
+elif st.session_state.step == 3:
+    st.subheader("🎨 ส่วนที่ 3: งานอดิเรกและสไตล์กิจกรรม")
+    st.info("ประเมินรูปแบบพฤติกรรมยามว่างและทักษะที่คุณชื่นชอบ")
+    
+    with st.form("form_step3"):
         user_hob_responses = {}
         for q in HOBBY_QUESTIONS:
             user_hob_responses[q["id"]] = {
@@ -135,10 +165,27 @@ if st.session_state.step == 1:
             }
             st.divider()
 
-        # ----------------------------------------------------
-        # ส่วนที่ 4: เป้าหมายอาชีพ (4 ข้อ)
-        # ----------------------------------------------------
-        st.markdown("### 💼 4. เป้าหมายและสไตล์การทำงานในอนาคต")
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.form_submit_button("⬅ ย้อนกลับ"):
+                st.session_state.step = 2
+                st.rerun()
+        with col_b2:
+            if st.form_submit_button("ถัดไป: เป้าหมายอาชีพและการเงิน ➔", use_container_width=True):
+                st.session_state.user_hob_responses = user_hob_responses
+                st.session_state.step = 4
+                st.rerun()
+
+
+# ==========================================
+# STEP 4: เป้าหมายอาชีพ & ทุนการศึกษา (การเงิน)
+# ==========================================
+elif st.session_state.step == 4:
+    st.subheader("💼 ส่วนที่ 4: เป้าหมายอาชีพ และ ปัจจัยการเงิน/ทุนการศึกษา")
+    st.info("ระบุค่านิยมในการทำงานและข้อจำกัดด้านทุนการศึกษาต่อ")
+    
+    with st.form("form_step4"):
+        st.markdown("#### 🎯 1. ลักษณะอาชีพในอนาคตที่คาดหวัง")
         user_goal_responses = {}
         for q in GOAL_QUESTIONS:
             user_goal_responses[q["id"]] = {
@@ -153,40 +200,37 @@ if st.session_state.step == 1:
             }
             st.divider()
 
-        # ----------------------------------------------------
-        # ส่วนที่ 5: ปัจจัยด้านทุนการศึกษา
-        # ----------------------------------------------------
-        st.markdown("### 💰 5. เงื่อนไขและข้อจำกัดด้านทุนการศึกษา")
+        st.markdown("#### 💰 2. ข้อจำกัดและปัจจัยด้านการเงิน / ทุนการศึกษา")
         capital = st.radio(
-            "โปรดเลือกเงื่อนไขด้านทุนทรัพย์ในการศึกษาต่อ:",
+            "เงื่อนไขด้านทุนทรัพย์ในการศึกษาต่อของคุณ:",
             [
                 "มีข้อจำกัดสูง (ต้องการคณะมีทุนเรียนฟรี / จบแล้วมีงานทำทันที / คืนทุนไว)",
                 "ไม่มีข้อจำกัด หรือมีทุนทรัพย์ปานกลางถึงสูง"
             ]
         )
 
-        submit_btn = st.form_submit_button("🚀 ประมวลผลด้วยตรรกศาสตร์คณิตศาสตร์", use_container_width=True)
-        
-        if submit_btn:
-            st.session_state.user_cog_responses = user_cog_responses
-            st.session_state.user_sub_responses = user_sub_responses
-            st.session_state.user_hob_responses = user_hob_responses
-            st.session_state.user_goal_responses = user_goal_responses
-            st.session_state.capital = capital
-            st.session_state.step = 2
-            st.rerun()
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.form_submit_button("⬅ ย้อนกลับ"):
+                st.session_state.step = 3
+                st.rerun()
+        with col_b2:
+            if st.form_submit_button("🚀 ประมวลผลด้วยตรรกศาสตร์", use_container_width=True):
+                st.session_state.user_goal_responses = user_goal_responses
+                st.session_state.capital = capital
+                st.session_state.step = 5
+                st.rerun()
+
 
 # ==========================================
-# 3. STEP 2: ประมวลผลและแสดงผลลัพธ์
+# STEP 5: แสดงผลลัพธ์และพิสูจน์ตรรกศาสตร์
 # ==========================================
-elif st.session_state.step == 2:
+elif st.session_state.step == 5:
     cog_resp = st.session_state.get("user_cog_responses", {})
     sub_resp = st.session_state.get("user_sub_responses", {})
-    hob_resp = st.session_state.get("user_hob_responses", {})
-    goal_resp = st.session_state.get("user_goal_responses", {})
     capital = st.session_state.get("capital", "")
 
-    # 1. คำนวณคะแนน Cognitive Functions (8 ด้าน)
+    # 1. คำนวณคะแนน Cognitive Functions
     func_scores = {"Te": 0, "Ti": 0, "Fe": 0, "Fi": 0, "Ne": 0, "Ni": 0, "Se": 0, "Si": 0}
     for q_id, val in cog_resp.items():
         if val["ans"] == "ใช่":
@@ -194,11 +238,10 @@ elif st.session_state.step == 2:
 
     dom_func = max(func_scores, key=func_scores.get)
 
-    # 2. แปลงคำตอบความชอบเป็นตัวแปรประพจน์จริง/เท็จ
+    # 2. แปลงเป็นประพจน์จริง/เท็จ
     a_math = sub_resp.get("sub_math", {}).get("ans") == "ใช่"
     a_sci = sub_resp.get("sub_sci", {}).get("ans") == "ใช่"
     a_art = sub_resp.get("sub_art", {}).get("ans") == "ใช่"
-    a_biz = sub_resp.get("sub_biz", {}).get("ans") == "ใช่"
 
     p_Ti = func_scores["Ti"] >= 4
     p_Te = func_scores["Te"] >= 4
@@ -207,13 +250,13 @@ elif st.session_state.step == 2:
 
     c_low = "มีข้อจำกัดสูง" in capital  # True = ทุนน้อย
 
-    # 3. สูตรประมวลผลตรรกศาสตร์
+    # 3. สูตรตรรกศาสตร์
     rule_tech = (p_Ti or p_Te) and a_math and c_low
     rule_health = (p_Fe or (func_scores["Si"] >= 4)) and a_sci and c_low
     rule_creative = (p_Ne or a_art) and (not c_low)
 
     # แสดงผล
-    st.subheader("🎯 ผลการวิเคราะห์ด้วยตรรกศาสตร์")
+    st.subheader("📊 ผลการประมวลผลวิเคราะห์ตรรกศาสตร์")
     
     st.markdown(f"""
     <div style="text-align: center; margin-bottom: 2rem;">
