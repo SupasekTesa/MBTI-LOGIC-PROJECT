@@ -1,152 +1,302 @@
 import streamlit as st
 
 # ==========================================
-# 1. คลังคำถาม Cognitive Functions ทั้ง 8 ตัว
+# 1. ตั้งค่าหน้าเว็บ และ CSS ตกแต่งความสวยงาม
 # ==========================================
-# แต่ละข้อจะให้ผู้ใช้เลือกระดับความตรงกับตัวเอง (1 ถึง 5)
-COGNITIVE_QUESTIONS = [
-    {"id": "te_1", "func": "Te", "text": "ฉันชอบเน้นผลลัพธ์ จัดระบบ วางแผนขั้นตอนการทำงานให้มีประสิทธิภาพสูงสุด"},
-    {"id": "ti_1", "func": "Ti", "text": "ฉันชอบวิเคราะห์เจาะลึก รื้อดูระบบภายใน เพื่อเข้าใจหลักการทำงานที่แท้จริงอย่างแม่นยำ"},
-    {"id": "fe_1", "func": "Fe", "text": "ฉันแคร์ความรู้สึกของคนรอบข้าง ไวต่อบรรยากาศกลุ่ม และชอบสร้างความสมานฉันท์"},
-    {"id": "fi_1", "func": "Fi", "text": "ฉันยึดมั่นในคุณค่า จริยธรรม และความรู้สึกที่แท้จริงภายในของตัวเองอย่างแรงกล้า"},
-    {"id": "ne_1", "func": "Ne", "text": "ฉันชอบคิดนอกกรอบ เชื่อมโยงไอเดียใหม่ๆ และมองเห็นความเป็นไปได้หลากหลายช่องทาง"},
-    {"id": "ni_1", "func": "Ni", "text": "ฉันชอบมองภาพรวมในอนาคต มีลางสังหรณ์แม่นยำ และมุ่งสู่เป้าหมายระยะยาวเพียงหนึ่งเดียว"},
-    {"id": "se_1", "func": "Se", "text": "ฉันตอบสนองต่อสิ่งแวดล้อมรอบตัวได้ดี ชอบการลงมือทำจริง และอยู่กับปัจจุบันขณะ"},
-    {"id": "si_1", "func": "Si", "text": "ฉันให้ความสำคัญกับประสบการณ์ในอดีต กฎระเบียบ รายละเอียด และความมั่นคงปลอดภัย"}
-]
+st.set_page_config(
+    page_title="ระบบประมวลผลตรรกศาสตร์เพื่อการศึกษาต่อ",
+    page_icon="🎓",
+    layout="wide"
+)
 
-# Page Configuration
-st.set_page_config(page_title="ระบบประมวลผล Cognitive Functions + ตรรกศาสตร์", page_icon="🎓", layout="wide")
-
+# Custom CSS เพื่อความสวยงาม สไตล์ Modern Dashboard
 st.markdown("""
 <style>
-    .main-title { font-size: 2rem; color: #1E3A8A; text-align: center; font-weight: bold; }
-    .badge { background: #1E40AF; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; }
-    .logic-box { background-color: #EFF6FF; border-left: 5px solid #2563EB; padding: 1rem; border-radius: 6px; font-family: monospace; color: #1E40AF; }
+    /* แบ็กกราวด์และฟอนต์หลัก */
+    .stApp {
+        background-color: #F8FAFC;
+    }
+    
+    /* หัวข้อหลัก */
+    .header-box {
+        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+        color: white;
+        padding: 2.5rem 1.5rem;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+        margin-bottom: 2rem;
+    }
+    .header-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+    .header-sub {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    /* การ์ดคำถามและผลลัพธ์ */
+    .custom-card {
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+    }
+
+    /* กล่องแสดงผลตรรกศาสตร์ */
+    .logic-box {
+        background-color: #EFF6FF;
+        border: 1px solid #BFDBFE;
+        border-left: 6px solid #2563EB;
+        border-radius: 8px;
+        padding: 1.2rem;
+        font-family: 'Courier New', monospace;
+        color: #1E40AF;
+        line-height: 1.6;
+    }
+
+    /* ป้ายแสดงประเภท MBTI / Function */
+    .badge-mbti {
+        background-color: #2563EB;
+        color: white;
+        font-size: 2rem;
+        font-weight: bold;
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        display: inline-block;
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">🎓 ระบบวัดแวว MBTI & ตรรกศาสตร์เพื่อการศึกษาต่อ</div>', unsafe_allow_html=True)
 
+# ==========================================
+# 2. คลังคำถาม (แก้ไข/เพิ่มคำถามตรงนี้ได้เลย)
+# ==========================================
+
+# 2.1 คำถาม Cognitive Functions (8 ด้าน)
+COGNITIVE_QUESTIONS = [
+    {"id": "q_te", "func": "Te", "label": "1. ฉันชอบวางแผนที่เป็นระบบ เน้นผลลัพธ์ที่วัดผลได้ และจัดการสิ่งต่างๆ ให้มีประสิทธิภาพสูงสุด"},
+    {"id": "q_ti", "func": "Ti", "label": "2. ฉันชอบวิเคราะห์เจาะลึก รื้อดูระบบภายใน เพื่อเข้าใจหลักการทำงานที่แท้จริงอย่างแม่นยำ"},
+    {"id": "q_fe", "func": "Fe", "label": "3. ฉันแคร์ความรู้สึกของคนรอบข้าง ไวต่อบรรยากาศกลุ่ม และชอบสร้างความเข้าใจอันดีระหว่างกัน"},
+    {"id": "q_fi", "func": "Fi", "label": "4. ฉันยึดมั่นในคุณค่า จริยธรรม และความรู้สึกที่แท้จริงจากภายในของตัวเองเป็นสำคัญ"},
+    {"id": "q_ne", "func": "Ne", "label": "5. ฉันชอบคิดนอกกรอบ เชื่อมโยงไอเดียใหม่ๆ และเห็นความเป็นไปได้ที่หลากหลาย"},
+    {"id": "q_ni", "func": "Ni", "label": "6. ฉันชอบมองภาพรวมในอนาคต มักมีลางสังหรณ์แม่นยำ และมุ่งสู่เป้าหมายระยะยาว"},
+    {"id": "q_se", "func": "Se", "label": "7. ฉันตอบสนองต่อสิ่งแวดล้อมรอบตัวได้ดี ชอบลงมือปฏิบัติจริง และสนุกกับปัจจุบัน"},
+    {"id": "q_si", "func": "Si", "label": "8. ฉันให้ความสำคัญกับรายละเอียด ประสบการณ์ในอดีต กฎระเบียบ และความมั่นคง"}
+]
+
+# 2.2 คำถามมิติ MBTI เสริม
+MBTI_DIMENSIONS = [
+    {
+        "id": "dim_ei",
+        "title": "⚡ มิติการรับพลังงาน (E vs I)",
+        "options": ["Extraversion (E): ชอบเข้าสังคม กิจกรรมกลุ่ม ได้พลังงานจากคนรอบข้าง", 
+                    "Introversion (I): ชอบความสงบ ชาร์จพลังงานจากการอยู่คนเดียว"]
+    },
+    {
+        "id": "dim_jp",
+        "title": "📅 มิติลักษณะการใช้ชีวิต (J vs P)",
+        "options": ["Judging (J): ชอบวางแผนล่วงหน้า ทำงานมีระเบียบแบบแผนชัดเจน", 
+                    "Perceiving (P): ยืดหยุ่น ปรับเปลี่ยนตามสถานการณ์ ชอบทำงานใกล้เดดไลน์"]
+    }
+]
+
+
+# ==========================================
+# 3. ส่วนหัวของเว็บไซต์ (Header)
+# ==========================================
+st.markdown("""
+<div class="header-box">
+    <div class="header-title">🎓 ระบบวัดแววเลือกคณะและอาชีพด้วยตรรกศาสตร์</div>
+    <div class="header-sub">โครงงานคณิตศาสตร์บูรณาการ: ตรรกศาสตร์ + MBTI Cognitive Functions + ปัจจัยทุนการศึกษา</div>
+</div>
+""", unsafe_allow_html=True)
+
+
+# ==========================================
+# 4. จัดการขั้นตอนทำแบบสอบถาม (Step Management)
+# ==========================================
 if "step" not in st.session_state:
     st.session_state.step = 1
 
-# ==========================================
-# STEP 1: ประเมิน Cognitive Functions 8 ตัว
-# ==========================================
+# แสดง Progress Bar
+progress_val = (st.session_state.step - 1) / 2
+st.progress(progress_val)
+
+
+# ------------------------------------------
+# ขั้นตอนที่ 1: ตอบแบบประเมินบุคลิกภาพ & ความสนใจ
+# ------------------------------------------
 if st.session_state.step == 1:
-    st.subheader("🧠 ส่วนที่ 1: ประเมินกระบวนการทางความคิด (Cognitive Functions)")
-    st.write("ให้คะแนนข้อความต่อไปนี้ตามความเป็นจริง (1 = ไม่จริงเลย, 5 = ตรงกับฉันมากที่สุด)")
+    st.subheader("📋 แบบสอบถามวัดแววและความสนใจ")
     
-    with st.form("cog_form"):
-        scores = {}
-        for q in COGNITIVE_QUESTIONS:
-            scores[q["id"]] = st.slider(q["text"], 1, 5, 3, key=q["id"])
-            st.divider()
+    with st.form("assessment_form"):
+        
+        # ส่วนที่ 1: Cognitive Functions
+        st.markdown("### 🧠 1. ประเมินกระบวนการคิด (Cognitive Functions)")
+        st.caption("เลือกสเกล 1 (ไม่จริงเลย) ถึง 5 (ตรงกับฉันมากที่สุด)")
+        
+        cog_answers = {}
+        col_a, col_b = st.columns(2)
+        
+        for idx, q in enumerate(COGNITIVE_QUESTIONS):
+            # สลับลงคอลัมน์ซ้าย-ขวา เพื่อความสวยงาม
+            target_col = col_a if idx % 2 == 0 else col_b
+            with target_col:
+                cog_answers[q["func"]] = st.slider(
+                    q["label"], min_value=1, max_value=5, value=3, key=q["id"]
+                )
+
+        st.divider()
+
+        # ส่วนที่ 2: MBTI Dimensions
+        st.markdown("### 🎭 2. มิติบุคลิกภาพเพิ่มเติม")
+        mbti_answers = {}
+        for dim in MBTI_DIMENSIONS:
+            mbti_answers[dim["id"]] = st.radio(dim["title"], dim["options"], key=dim["id"])
+
+        st.divider()
+
+        # ส่วนที่ 3: วิชาที่ชอบและเงื่อนไขทุน
+        st.markdown("### 📚 3. วิชาที่ชอบและเงื่อนไขทุนทรัพย์")
+        col_c, col_d = st.columns(2)
+        
+        with col_c:
+            subject = st.selectbox(
+                "กลุ่มรายวิชาที่ชอบ/ถนัดที่สุด:",
+                [
+                    "กลุ่มคำนวณ เทคโนโลยี และตรรกะ (คณิตศาสตร์, ฟิสิกส์, IT)",
+                    "กลุ่มวิทยาศาสตร์ชีวภาพ สุขภาพ (เคมี, ชีววิทยา, สุขภาพ)",
+                    "กลุ่มภาษา สื่อสาร สังคม และบริหาร (ภาษา, สังคม, การตลาด)",
+                    "กลุ่มศิลปะ ออกแบบ และงานสร้างสรรค์ (การออกแบบ, ดนตรี, สื่อ)"
+                ]
+            )
             
-        btn_1 = st.form_submit_button("ถัดไป: เลือกความสนใจและทุนทรัพย์ ➔", use_container_width=True)
-        if btn_1:
-            st.session_state.cog_scores = scores
+        with col_d:
+            capital = st.radio(
+                "เงื่อนไขและข้อจำกัดด้านทุนการศึกษา:",
+                [
+                    "มีข้อจำกัดสูง (ต้องการคณะมีทุนเรียนฟรี / จบแล้วมีงานทำทันที)",
+                    "ไม่มีข้อจำกัด หรือมีทุนทรัพย์ปานกลางถึงสูง"
+                ]
+            )
+
+        submit_btn = st.form_submit_button("🚀 ประมวลผลด้วยตรรกศาสตร์คณิตศาสตร์", use_container_width=True)
+        
+        if submit_btn:
+            # บันทึกค่าลง Session State
+            st.session_state.cog_scores = cog_answers
+            st.session_state.mbti_answers = mbti_answers
+            st.session_state.subject = subject
+            st.session_state.capital = capital
             st.session_state.step = 2
             st.rerun()
 
-# ==========================================
-# STEP 2: ความสนใจ & ทุนการศึกษา
-# ==========================================
-elif st.session_state.step == 2:
-    st.subheader("📚 ส่วนที่ 2: ความสนใจ และ ปัจจัยทางเศรษฐกิจ")
-    
-    with st.form("info_form"):
-        subject = st.selectbox("กลุ่มวิชาที่ชื่นชอบที่สุด:", [
-            "คำนวณ เทคโนโลยี และตรรกศาสตร์ (คณิต, ฟิสิกส์, IT)",
-            "วิทยาศาสตร์ชีวภาพ สุขภาพ และการทดลอง (เคมี, ชีวะ)",
-            "ภาษา ศิลปะ สื่อ และงานสร้างสรรค์",
-            "บริหาร การจัดการ สังคม และกฎหมาย"
-        ])
-        
-        capital = st.radio("ข้อจำกัดด้านทุนทรัพย์ในการศึกษาต่อ:", [
-            "มีข้อจำกัดสูง (ต้องการคณะที่มีทุนเรียนฟรี / จบแล้วมีงานทำทันที)",
-            "ไม่มีข้อจำกัด หรือมีทุนทรัพย์ปานกลางถึงสูง"
-        ])
-        
-        btn_2 = st.form_submit_button("🚀 ประมวลผลตรรกศาสตร์คณิตศาสตร์ ➔", use_container_width=True)
-        if btn_2:
-            st.session_state.subject = subject
-            st.session_state.capital = capital
-            st.session_state.step = 3
-            st.rerun()
 
-# ==========================================
-# STEP 3: ประมวลผลตรรกศาสตร์ (Mathematical Logic Evaluation)
-# ==========================================
-elif st.session_state.step == 3:
-    st.subheader("📊 ผลการวิเคราะห์ Cognitive Functions และตรรกศาสตร์")
+# ------------------------------------------
+# ขั้นตอนที่ 2: ประมวลผลตรรกศาสตร์ & แสดงผลลัพธ์
+# ------------------------------------------
+elif st.session_state.step == 2:
     
-    raw_scores = st.session_state.get("cog_scores", {})
-    
-    # 1. รวมคะแนนแต่ละ Function
-    func_totals = {"Te": 0, "Ti": 0, "Fe": 0, "Fi": 0, "Ne": 0, "Ni": 0, "Se": 0, "Si": 0}
-    for q in COGNITIVE_QUESTIONS:
-        f = q["func"]
-        func_totals[f] += raw_scores.get(q["id"], 3)
-        
-    # หา Dominant Function (ฟังก์ชันที่ได้คะแนนสูงสุด)
-    dom_func = max(func_totals, key=func_totals.get)
-    
-    # 2. แปลงเป็นตัวแปรประพจน์ทางคณิตศาสตร์ (True / False)
-    # ให้ประพจน์เป็น True เมื่อคะแนนฟังก์ชันนั้นสูงกว่าหรือเท่ากับ 4
-    p_Te = func_totals["Te"] >= 4
-    p_Ti = func_totals["Ti"] >= 4
-    p_Fe = func_totals["Fe"] >= 4
-    p_Fi = func_totals["Fi"] >= 4
-    p_Ne = func_totals["Ne"] >= 4
-    p_Ni = func_totals["Ni"] >= 4
-    
+    # 1. ดึงค่าที่บันทึกไว้
+    cog_scores = st.session_state.get("cog_scores", {})
+    mbti_ans = st.session_state.get("mbti_answers", {})
     subject = st.session_state.get("subject", "")
     capital = st.session_state.get("capital", "")
+
+    # 2. คำนวณฟังก์ชันเด่น (Dominant Cognitive Function)
+    dom_func = max(cog_scores, key=cog_scores.get)
+    
+    # คำนวณ MBTI ย่อ
+    e_or_i = "E" if "Extraversion" in mbti_ans.get("dim_ei", "") else "I"
+    j_or_p = "J" if "Judging" in mbti_ans.get("dim_jp", "") else "P"
+    mbti_summary = f"{e_or_i}-{dom_func}-{j_or_p}"
+
+    # 3. แปลงเป็นตัวแปรประพจน์ทางคณิตศาสตร์ (Boolean Propositions: True/False)
+    p_Te = cog_scores.get("Te", 0) >= 4
+    p_Ti = cog_scores.get("Ti", 0) >= 4
+    p_Fe = cog_scores.get("Fe", 0) >= 4
+    p_Ne = cog_scores.get("Ne", 0) >= 4
     
     a_math = "คำนวณ" in subject
     a_bio = "วิทยาศาสตร์ชีวภาพ" in subject
-    c_low = "มีข้อจำกัดสูง" in capital # T = ทุนน้อย
+    a_art = "ศิลปะ" in subject
     
-    # 3. ประมวลผลด้วยกฎตรรกศาสตร์ (Logical Rules)
-    # Rule 1: สาย Tech / วิศวะ / คอมพิวเตอร์
-    rule_tech = (p_Ti or p_Te) and a_math and c_low
-    # Rule 2: สาย การแพทย์ / พยาบาล / สุขภาพ
-    rule_health = (p_Fe or p_Si) and a_bio and c_low
-    # Rule 3: สาย นวัตกรรม / ครีเอทีฟ / การบริหาร
-    rule_creative = (p_Ne or p_Ni) and (not c_low)
+    c_low = "มีข้อจำกัดสูง" in capital  # True = ทุนน้อย
 
-    col1, col2 = st.columns([1, 1])
+    # 4. ประมวลผลด้วยกฎตรรกศาสตร์ (Logical Decision Rules)
+    rule_tech = (p_Ti or p_Te) and a_math and c_low
+    rule_health = (p_Fe or (cog_scores.get("Si", 0) >= 4)) and a_bio and c_low
+    rule_creative = (p_Ne or a_art) and (not c_low)
+
+    # ------------------ แสดงผลลัพธ์หน้าเว็บ ------------------
+    st.subheader("🎯 ผลการวิเคราะห์ทางตรรกศาสตร์")
     
-    with col1:
-        st.markdown(f"### 🧬 ฟังก์ชันเด่นของคุณ: **{dom_func}**")
-        st.write("คะแนน Cognitive Functions ทั้ง 8 ตัว:")
-        st.json(func_totals)
+    # กล่องสรุปบุคลิกภาพ
+    st.markdown(f"""
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="badge-mbti">{mbti_summary}</span>
+        <p style="margin-top: 10px; color: #64748B;">ฟังก์ชันเด่นของคุณคือ <b>{dom_func}</b></p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_res1, col_res2 = st.columns([3, 2])
+
+    with col_res1:
+        st.markdown("### 🎓 คณะและอาชีพที่สอดคล้อง")
+        st.markdown('<div class="custom-card">', unsafe_allow_html=True)
         
-    with col2:
-        st.markdown("### 🎓 คำแนะนำคณะและอาชีพ")
         if rule_tech:
-            st.success("**แนะนำ:** คณะวิทยาการคอมพิวเตอร์ / วิศวกรรมซอฟต์แวร์ / ครุศาสตร์คอมพิวเตอร์")
-            st.info("**แนวทางทุน:** มีทุนเรียนฟรีจากบริษัทเทคโนโลยี / จบแล้วคืนทุนไว มีงานรองรับ 100%")
-        elif rule_health:
-            st.success("**แนะนำ:** คณะพยาบาลศาสตร์ / สหเวชศาสตร์ / สาธารณสุขศาสตร์")
-            st.info("**แนวทางทุน:** มีทุนผูกพันจากโรงพยาบาลรัฐบาล เรียนฟรี มีเบี้ยเลี้ยง จบแล้วบรรจุทันที")
-        else:
-            st.success("**แนะนำ:** คณะสถาปัตยกรรม / นิเทศศาสตร์ / บริหารธุรกิจ / เทคโนโลยีสารสนเทศ")
-            st.info("**แนวทางทุน:** สามารถเลือกสายงานยืดหยุ่น สร้างนวัตกรรมใหม่ๆ หรือทำธุรกิจส่วนตัวได้")
+            st.markdown("#### 💻 กลุ่มสาขาเทคโนโลยี / คำนวณ / ครูทุน")
+            st.markdown("- **คณะที่แนะนำ:** วิทยาการคอมพิวเตอร์, วิศวกรรมซอฟต์แวร์, ครุศาสตร์ (สาขาคอมพิวเตอร์/คณิตศาสตร์)")
+            st.markdown("- **อาชีพ:** นักพัฒนาซอฟต์แวร์ (Software Developer), นักวิเคราะห์ข้อมูล (Data Analyst), ครูทุนรัฐบาล")
+            st.markdown("- **การวิเคราะห์ทุน:** เป็นสาขาที่คืนทุนไว ตลาดต้องการสูง มีทุนเรียนฟรีจากเอกชนและรัฐบาลจำนวนมาก")
             
-        st.markdown("#### 📐 สมการตรรกศาสตร์ที่ใช้พิสูจน์ (Logic Expression)")
+        elif rule_health:
+            st.markdown("#### 🏥 กลุ่มสาขาการแพทย์ / พยาบาล / สุขภาพ")
+            st.markdown("- **คณะที่แนะนำ:** พยาบาลศาสตร์, สหเวชศาสตร์ (กายภาพบำบัด/รังสีเทคนิค), สาธารณสุขศาสตร์")
+            st.markdown("- **อาชีพ:** พยาบาลวิชาชีพ, นักเทคนิคการแพทย์, เจ้าหน้าที่สาธารณสุข")
+            st.markdown("- **การวิเคราะห์ทุน:** เหมาะกับทุนผูกพันสถาบัน/โรงพยาบาล เรียนฟรี มีเบี้ยเลี้ยง จบแล้วมีงานบรรจุทันที")
+            
+        elif rule_creative:
+            st.markdown("#### 🎨 กลุ่มสาขานวัตกรรม / สื่อ / การบริหาร")
+            st.markdown("- **คณะที่แนะนำ:** สถาปัตยกรรมศาสตร์, นิเทศศาสตร์สื่อดิจิทัล, บริหารธุรกิจ (การตลาดดิจิทัล)")
+            st.markdown("- **อาชีพ:** UX/UI Designer, ครีเอทีฟ, ผู้ประกอบการยุคใหม่")
+            st.markdown("- **การวิเคราะห์ทุน:** ไม่ติดข้อจำกัดทุนทรัพย์ สามารถเลือกสาขาที่ใช้ทักษะเฉพาะทางและความคิดสร้างสรรค์ได้อย่างเต็มที่")
+            
+        else:
+            st.markdown("#### 🏛️ กลุ่มสาขาบริหารธุรกิจ / มนุษยศาสตร์ / สังคมศาสตร์")
+            st.markdown("- **คณะที่แนะนำ:** บริหารธุรกิจ, การบัญชี, อักษรศาสตร์, รัฐศาสตร์")
+            st.markdown("- **อาชีพ:** นักการตลาด, นักบริหารทรัพยากรบุคคล (HR), เจ้าหน้าที่บริหารงานทั่วไป")
+            st.markdown("- **การวิเคราะห์ทุน:** มีความยืดหยุ่นสูง สามารถต่อยอดกู้ยืม กยศ. หรือขอทุนมหาวิทยาลัยเพิ่มเติมได้")
+            
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_res2:
+        st.markdown("### 📐 การพิสูจน์ประพจน์ทางคณิตศาสตร์")
         st.markdown(f"""
         <div class="logic-box">
-        • p_Ti (Thinking Inside) = {p_Ti}<br>
-        • p_Te (Thinking Outside) = {p_Te}<br>
+        <b>1. ตัวแปรประพจน์ (Propositions):</b><br>
+        • p_Ti (Thinking Logic) = {p_Ti}<br>
+        • p_Te (Thinking System) = {p_Te}<br>
+        • a_math (วิชาคำนวณ) = {a_math}<br>
         • c_low (ข้อจำกัดทุนสูง) = {c_low}<br><br>
-        <b>สูตรตรรกะที่รันจริง:</b><br>
-        Rule_Tech = (p_Ti ∨ p_Te) ∧ a_math ∧ c_low → <b>{rule_tech}</b>
+        <b>2. ผลการวิเคราะห์กฎตรรกศาสตร์:</b><br>
+        • Rule_Tech = (p_Ti ∨ p_Te) ∧ a_math ∧ c_low<br>
+          ➔ ผลลัพธ์: <b>{rule_tech}</b><br><br>
+        • Rule_Health = (p_Fe ∨ p_Si) ∧ a_bio ∧ c_low<br>
+          ➔ ผลลัพธ์: <b>{rule_health}</b><br><br>
+        • Rule_Creative = (p_Ne ∨ a_art) ∧ (¬c_low)<br>
+          ➔ ผลลัพธ์: <b>{rule_creative}</b>
         </div>
         """, unsafe_allow_html=True)
-        
-    if st.button("🔄 ทำแบบสอบถามใหม่"):
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔄 ทำแบบประเมินใหม่อีกครั้ง", use_container_width=True):
         st.session_state.step = 1
         st.rerun()
