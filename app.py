@@ -339,14 +339,19 @@ elif st.session_state.step == 3:
                 st.rerun()
 
 # ==========================================
-# STEP 4: การเงิน/เป้าหมาย (ปรับปรุงดีไซน์สวยงาม)
+# STEP 4: การเงิน/เป้าหมายอาชีพ (อัปเดตใหม่ 5 ข้อละเอียด)
 # ==========================================
 elif st.session_state.step == 4:
     st.subheader("💼 ส่วนที่ 4: เป้าหมายอาชีพ และ ปัจจัยทุนการศึกษา")
-    st.caption("ข้อมูลส่วนนี้จะถูกใช้เพื่อกรองสถาบันการศึกษาและทุนการศึกษาที่เหมาะสมกับคุณ")
+    st.caption("โปรดระบุเงื่อนไขตามความเป็นจริง เพื่อให้ระบบวิเคราะห์เส้นทางศึกษาต่อและทุนที่เหมาะสมที่สุด")
+
+    from questions import GOAL_QUESTIONS, FINANCIAL_QUESTIONS
 
     with st.form("form_step4"):
         user_goal_responses = {}
+        
+        # 1. คำถามเป้าหมายอาชีพ
+        st.markdown("#### 🎯 1. สไตล์เป้าหมายการทำงานในอนาคต")
         for idx, q in enumerate(GOAL_QUESTIONS, 1):
             st.markdown(f"""
             <div class="sub-question-card" style="border-left-color: #10B981;">
@@ -355,7 +360,7 @@ elif st.session_state.step == 4:
             </div>
             """, unsafe_allow_html=True)
 
-            col_ans, col_space = st.columns([1, 2])
+            col_ans, _ = st.columns([1, 2])
             with col_ans:
                 ans = st.radio(
                     f"ตอบข้อ {idx}:", 
@@ -365,28 +370,32 @@ elif st.session_state.step == 4:
                     key=q["id"],
                     label_visibility="collapsed"
                 )
-
-            user_goal_responses[q["id"]] = {
-                "category": q["category"],
-                "ans": ans
-            }
+            user_goal_responses[q["id"]] = {"category": q["category"], "ans": ans}
             st.markdown("<br>", unsafe_allow_html=True)
 
-        st.markdown("""
-        <div class="sub-question-card" style="border-left-color: #F59E0B;">
-            <span class="category-badge">💰 ทุนการศึกษา</span>
-            <div style="font-weight: 600; color: #1E293B; font-size: 1.05rem;">เงื่อนไขด้านทุนทรัพย์ในการศึกษาต่อ:</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.divider()
 
-        capital = st.radio(
-            "เงื่อนไขด้านทุนทรัพย์:",
-            ["มีข้อจำกัดสูง (ต้องการทุนเรียนฟรี/จบแล้วมีงานทำทันที/คืนทุนไว)", "ไม่มีข้อจำกัด หรือมีทุนทรัพย์ปานกลางถึงสูง"],
-            index=1,
-            label_visibility="collapsed"
-        )
+        # 2. คำถามเจาะลึกการเงินและทุนทรัพย์ 5 ข้อ
+        st.markdown("#### 💰 2. เงื่อนไขด้านทุนทรัพย์และภาระทางการเงิน (5 ข้อ)")
+        
+        user_fin_responses = {}
+        for f_q in FINANCIAL_QUESTIONS:
+            st.markdown(f"""
+            <div class="sub-question-card" style="border-left-color: #F59E0B;">
+                <span class="category-badge">💳 {f_q['category']}</span>
+                <div style="font-weight: 600; color: #1E293B; font-size: 1.05rem;">{f_q['label']}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+            selected_opt = st.radio(
+                f_q['label'],
+                options=f_q['options'],
+                index=0,
+                key=f_q['id'],
+                label_visibility="collapsed"
+            )
+            user_fin_responses[f_q['id']] = selected_opt
+            st.markdown("<br>", unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
         with col1:
@@ -396,10 +405,11 @@ elif st.session_state.step == 4:
         with col2:
             if st.form_submit_button("🚀 ประมวลผลและดูผลลัพธ์", use_container_width=True):
                 st.session_state.user_goal_responses = user_goal_responses
-                st.session_state.capital = capital
+                st.session_state.user_fin_responses = user_fin_responses
+                # กำหนดค่า capital สำหรับเงื่อนไขเดิมเพื่อป้องกันโค้ดค้าง
+                st.session_state.capital = user_fin_responses.get("fin_budget", "")
                 st.session_state.step = 5
                 st.rerun()
-
 # ==========================================
 # STEP 5: หน้าสรุปผลลัพธ์
 # ==========================================
