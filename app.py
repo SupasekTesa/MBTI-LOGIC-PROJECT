@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from streamlit_confetti import confetti
 from questions import (
     COGNITIVE_QUESTIONS, 
     SUBJECT_QUESTIONS, 
@@ -10,7 +9,7 @@ from questions import (
 )
 
 # ==========================================
-# 1. PAGE CONFIG & CUSTOM CSS (ตกแต่งความสวยงาม)
+# 1. PAGE CONFIG & CUSTOM CSS
 # ==========================================
 st.set_page_config(
     page_title="ระบบวิเคราะห์ MBTI & Cognitive Functions",
@@ -48,11 +47,6 @@ st.markdown("""
         padding: 1.2rem;
         text-align: center;
         box-shadow: 0 4px 6px rgba(0,0,0,0.03);
-        transition: transform 0.2s;
-    }
-    .func-card:hover {
-        transform: translateY(-5px);
-        border-color: #3B82F6;
     }
     .func-badge {
         font-size: 0.85rem;
@@ -96,7 +90,7 @@ st.markdown("""
 # ฐานข้อมูลจับคู่ MBTI & ลำดับฟังก์ชัน
 MBTI_STACKS = {
     "ENTP": {"Dom": "Ne", "Aux": "Ti", "Tert": "Fe", "Inf": "Si", "Title": "นักประดิษฐ์และนักโต้วิเคราะห์"},
-    "INTP": {"Dom": "Ti", "Aux": "Ne", "Tert": "Si", "Inf": "Fe", "Title": "นักนักคิดเชิงตรรกะและนักสืบค้น"},
+    "INTP": {"Dom": "Ti", "Aux": "Ne", "Tert": "Si", "Inf": "Fe", "Title": "นักคิดเชิงตรรกะและนักสืบค้น"},
     "ENTJ": {"Dom": "Te", "Aux": "Ni", "Tert": "Se", "Inf": "Fi", "Title": "ผู้บังคับบัญชาและนักวางกลยุทธ์"},
     "INTJ": {"Dom": "Ni", "Aux": "Te", "Tert": "Fi", "Inf": "Se", "Title": "นักวางแผนและนักคิดเชิงวิสัยทัศน์"},
     "ENFP": {"Dom": "Ne", "Aux": "Fi", "Tert": "Te", "Inf": "Si", "Title": "ผู้สร้างแรงบันดาลใจและนักจุดประกาย"},
@@ -135,7 +129,7 @@ st.progress(progress_val)
 
 
 # ==========================================
-# STEP 1: Cognitive Functions (80 ข้อ สเกล 1-5)
+# STEP 1: Cognitive Functions (80 ข้อ)
 # ==========================================
 if st.session_state.step == 1:
     st.subheader("🧠 ส่วนที่ 1: แบบประเมิน Cognitive Functions")
@@ -248,20 +242,21 @@ elif st.session_state.step == 4:
                 st.rerun()
 
 # ==========================================
-# STEP 5: หน้าสรุปผลลัพธ์ (สวยงาม + Animation)
+# STEP 5: หน้าสรุปผลลัพธ์ (ปลอดภัย 100% + st.balloons)
 # ==========================================
 elif st.session_state.step == 5:
-    # เรียกเอฟเฟกต์พลุฉลองกระดาษหลากสี
-    confetti()
+    # เอฟเฟกต์ลูกโป่งลอยฉลองจาก Streamlit โดยตรง
+    st.balloons()
 
     cog_resp = st.session_state.get("user_cog_responses", {})
     sub_resp = st.session_state.get("user_sub_responses", {})
     capital = st.session_state.get("capital", "")
 
-    # 1. คำนวณคะแนน Cognitive Functions ทั้ง 8 ตัว
+    # 1. คำนวณคะแนน Cognitive Functions
     func_scores = {"Ne": 0, "Ni": 0, "Se": 0, "Si": 0, "Te": 0, "Ti": 0, "Fe": 0, "Fi": 0}
     for q_id, val in cog_resp.items():
-        func_scores[val["func"]] += val["score"]
+        if isinstance(val, dict) and "func" in val and "score" in val:
+            func_scores[val["func"]] += val["score"]
 
     # 2. ค้นหา Type MBTI
     sorted_funcs = sorted(func_scores.items(), key=lambda x: x[1], reverse=True)
@@ -277,6 +272,20 @@ elif st.session_state.step == 5:
             predicted_type = mbti_name
 
     stack_info = MBTI_STACKS.get(predicted_type, MBTI_STACKS["ENTP"])
+
+    # 3. เตรียมคำนวณประพจน์ตรรกศาสตร์ล่วงหน้า (ป้องกัน Error ใน Tabs)
+    sub_math_val = sub_resp.get("sub_math", {})
+    sub_sci_val = sub_resp.get("sub_sci", {})
+    sub_art_val = sub_resp.get("sub_art", {})
+
+    a_math = (sub_math_val.get("ans") == "ใช่") if isinstance(sub_math_val, dict) else False
+    a_sci = (sub_sci_val.get("ans") == "ใช่") if isinstance(sub_sci_val, dict) else False
+    a_art = (sub_art_val.get("ans") == "ใช่") if isinstance(sub_art_val, dict) else False
+    c_low = "มีข้อจำกัดสูง" in capital if capital else False
+
+    rule_tech = (func_scores["Ti"] >= 12 or func_scores["Te"] >= 12) and a_math
+    rule_health = (func_scores["Fe"] >= 12 or func_scores["Si"] >= 12) and a_sci
+    rule_creative = (func_scores["Ne"] >= 12 or a_art)
 
     # ----------------------------------------------------
     # ส่วนหัวสรุป MBTI Hero Card
@@ -306,7 +315,6 @@ elif st.session_state.step == 5:
         st.caption("สมองของคุณประมวลผลข้อมูลและตัดสินใจผ่านฟังก์ชันหลัก 4 ลำดับนี้:")
 
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
-        
         funcs_to_show = [
             ("Dominant (ฟังก์ชันหลัก)", stack_info["Dom"]),
             ("Auxiliary (ฟังก์ชันรอง)", stack_info["Aux"]),
@@ -356,15 +364,6 @@ elif st.session_state.step == 5:
     # ==========================================
     with tab2:
         st.subheader("🎓 คณะและสายอาชีพที่เหมาะสมกับบุคลิกของคุณ")
-        
-        a_math = sub_resp.get("sub_math", {}).get("ans") == "ใช่"
-        a_sci = sub_resp.get("sub_sci", {}).get("ans") == "ใช่"
-        a_art = sub_resp.get("sub_art", {}).get("ans") == "ใช่"
-        c_low = "มีข้อจำกัดสูง" in capital
-
-        rule_tech = (func_scores["Ti"] >= 12 or func_scores["Te"] >= 12) and a_math
-        rule_health = (func_scores["Fe"] >= 12 or func_scores["Si"] >= 12) and a_sci
-        rule_creative = (func_scores["Ne"] >= 12 or a_art)
 
         if rule_tech:
             st.markdown("""
@@ -416,14 +415,15 @@ elif st.session_state.step == 5:
         st.markdown(f"""
         <div class="logic-box">
         <b>1. สรุปคะแนน Cognitive Functions (รวมจากแบบสอบถาม 80 ข้อ):</b><br>
-        • Ne (Extraverted Intuition) = {func_scores['Ne']} | Ni (Introverted Intuition) = {func_scores['Ni']}<br>
-        • Se (Extraverted Sensing)  = {func_scores['Se']} | Si (Introverted Sensing)  = {func_scores['Si']}<br>
-        • Te (Extraverted Thinking) = {func_scores['Te']} | Ti (Introverted Thinking) = {func_scores['Ti']}<br>
-        • Fe (Extraverted Feeling)  = {func_scores['Fe']} | Fi (Introverted Feeling)  = {func_scores['Fi']}<br><br>
+        • Ne = {func_scores['Ne']} | Ni = {func_scores['Ni']}<br>
+        • Se = {func_scores['Se']} | Si = {func_scores['Si']}<br>
+        • Te = {func_scores['Te']} | Ti = {func_scores['Ti']}<br>
+        • Fe = {func_scores['Fe']} | Fi = {func_scores['Fi']}<br><br>
         
         <b>2. กำหนดตัวแปรประพจน์ (Propositions):</b><br>
-        • p_Dom = {top_func} (ฟังก์ชันที่มีคะแนนสูงสุด)<br>
+        • p_Dom = {top_func} (ฟังก์ชันหลักที่ได้คะแนนสูงสุด)<br>
         • a_math (ชอบสายคำนวณ) = {a_math}<br>
+        • a_sci (ชอบสายวิทย์) = {a_sci}<br>
         • c_low (เงื่อนไขข้อจำกัดทุนสูง) = {c_low}<br><br>
         
         <b>3. การสรุปผลตามกฎเงื่อนไข (Rule Inference):</b><br>
