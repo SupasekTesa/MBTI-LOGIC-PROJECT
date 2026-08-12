@@ -27,7 +27,7 @@ st.markdown("""
         border: 1px solid #E2E8F0;
         border-radius: 12px;
         padding: 1.2rem 1.5rem;
-        margin-bottom: 1.2rem;
+        margin-bottom: 1rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
     .question-badge {
@@ -46,14 +46,26 @@ st.markdown("""
         color: #1E293B;
         margin-bottom: 0.5rem;
     }
-    
-    /* สเกลความหมาย 1 - 5 */
-    .scale-guide {
-        display: flex;
-        justify-content: space-between;
+
+    /* การ์ดคำถาม Step 2-4 (ปรับปรุงใหม่) */
+    .category-badge {
+        display: inline-block;
+        background-color: #F1F5F9;
+        color: #475569;
+        font-weight: 700;
         font-size: 0.8rem;
-        color: #64748B;
-        margin-top: 0.2rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        margin-bottom: 0.4rem;
+        border: 1px solid #CBD5E1;
+    }
+    .sub-question-card {
+        background-color: #FFFFFF;
+        border-left: 5px solid #3B82F6;
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 0.8rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
     }
 
     /* การ์ดสรุปผล MBTI */
@@ -162,7 +174,7 @@ st.progress(progress_val)
 
 
 # ==========================================
-# STEP 1: แบบประเมิน Cognitive Functions (แบ่งหน้าสไตล์มินิมอล)
+# STEP 1: แบบประเมิน Cognitive Functions
 # ==========================================
 if st.session_state.step == 1:
     current_page = st.session_state.cog_page
@@ -170,7 +182,6 @@ if st.session_state.step == 1:
     end_idx = min(start_idx + QUESTIONS_PER_PAGE, TOTAL_COG_QUESTIONS)
     current_questions = COGNITIVE_QUESTIONS[start_idx:end_idx]
 
-    # ส่วนหัวและแถบสถานะประจำย่อย
     st.subheader("🧠 ส่วนที่ 1: แบบประเมิน Cognitive Functions")
     
     col_p1, col_p2 = st.columns([3, 1])
@@ -180,7 +191,6 @@ if st.session_state.step == 1:
         sub_progress = (current_page + 1) / TOTAL_COG_PAGES
         st.progress(sub_progress)
 
-    # คำอธิบายระดับคะแนน
     st.info("💡 **ระดับการให้คะแนน:** 1 = ไม่ตรงเลย | 2 = ไม่ค่อยตรง | 3 = ปานกลาง | 4 = ค่อนข้างตรง | 5 = ตรงมากที่สุด")
 
     with st.form(key=f"form_step1_page_{current_page}"):
@@ -194,7 +204,6 @@ if st.session_state.step == 1:
             </div>
             """, unsafe_allow_html=True)
 
-            # ดึงค่าเดิมที่เคยตอบไว้ (ถ้ามี) ถ้าไม่มีให้ค่าเริ่มต้นเป็น 3
             saved_score = st.session_state.user_cog_responses.get(q["id"], {}).get("score", 3)
 
             selected_score = st.radio(
@@ -212,9 +221,7 @@ if st.session_state.step == 1:
             }
             st.markdown("<br>", unsafe_allow_html=True)
 
-        # ปุ่มควบคุมหน้าย่อย
         col_btn1, col_btn2 = st.columns(2)
-        
         with col_btn1:
             if current_page > 0:
                 submit_prev = st.form_submit_button("⬅ หน้าก่อนหน้า", use_container_width=True)
@@ -242,19 +249,38 @@ if st.session_state.step == 1:
                 st.rerun()
 
 # ==========================================
-# STEP 2: วิชาที่ชอบ
+# STEP 2: วิชาที่ชอบ (ปรับปรุงดีไซน์เป็น Card + 2 Columns)
 # ==========================================
 elif st.session_state.step == 2:
-    st.subheader("📚 ส่วนที่ 2: วิชาความถนัดและความชอบ")
-    
+    st.subheader("📚 ส่วนที่ 2: ความสนใจและความถนัดรายวิชา")
+    st.caption("โปรดเลือกการประเมินตามความเป็นจริง เพื่อความแม่นยำในการวิเคราะห์")
+
     with st.form("form_step2"):
         user_sub_responses = {}
-        for q in SUBJECT_QUESTIONS:
+        for idx, q in enumerate(SUBJECT_QUESTIONS, 1):
+            st.markdown(f"""
+            <div class="sub-question-card">
+                <span class="category-badge">🏷️ {q['category']}</span>
+                <div style="font-weight: 600; color: #1E293B; font-size: 1.05rem;">ข้อ {idx}. {q['text']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            col_ans, col_space = st.columns([1, 2])
+            with col_ans:
+                ans = st.radio(
+                    f"ตอบข้อ {idx}:", 
+                    ["ใช่", "ไม่ใช่"], 
+                    index=1, 
+                    horizontal=True, 
+                    key=q["id"],
+                    label_visibility="collapsed"
+                )
+
             user_sub_responses[q["id"]] = {
                 "category": q["category"],
-                "ans": st.radio(q["text"], ["ใช่", "ไม่ใช่"], index=1, horizontal=True, key=q["id"])
+                "ans": ans
             }
-            st.divider()
+            st.markdown("<br>", unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
         with col1:
@@ -268,19 +294,38 @@ elif st.session_state.step == 2:
                 st.rerun()
 
 # ==========================================
-# STEP 3: งานอดิเรก
+# STEP 3: งานอดิเรก (ปรับปรุงดีไซน์เป็น Card + 2 Columns)
 # ==========================================
 elif st.session_state.step == 3:
-    st.subheader("🎨 ส่วนที่ 3: งานอดิเรกและสไตล์กิจกรรม")
-    
+    st.subheader("🎨 ส่วนที่ 3: งานอดิเรกและสไตล์กิจกรรมในเวลาว่าง")
+    st.caption("เลือกกิจกรรมที่คุณทำแล้วรู้สึกสนุก มีพลัง หรือทำเป็นประจำ")
+
     with st.form("form_step3"):
         user_hob_responses = {}
-        for q in HOBBY_QUESTIONS:
+        for idx, q in enumerate(HOBBY_QUESTIONS, 1):
+            st.markdown(f"""
+            <div class="sub-question-card" style="border-left-color: #8B5CF6;">
+                <span class="category-badge">🎯 {q['category']}</span>
+                <div style="font-weight: 600; color: #1E293B; font-size: 1.05rem;">ข้อ {idx}. {q['text']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            col_ans, col_space = st.columns([1, 2])
+            with col_ans:
+                ans = st.radio(
+                    f"ตอบข้อ {idx}:", 
+                    ["ใช่", "ไม่ใช่"], 
+                    index=1, 
+                    horizontal=True, 
+                    key=q["id"],
+                    label_visibility="collapsed"
+                )
+
             user_hob_responses[q["id"]] = {
                 "category": q["category"],
-                "ans": st.radio(q["text"], ["ใช่", "ไม่ใช่"], index=1, horizontal=True, key=q["id"])
+                "ans": ans
             }
-            st.divider()
+            st.markdown("<br>", unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
         with col1:
@@ -294,24 +339,54 @@ elif st.session_state.step == 3:
                 st.rerun()
 
 # ==========================================
-# STEP 4: การเงิน/ทุนการศึกษา
+# STEP 4: การเงิน/เป้าหมาย (ปรับปรุงดีไซน์สวยงาม)
 # ==========================================
 elif st.session_state.step == 4:
     st.subheader("💼 ส่วนที่ 4: เป้าหมายอาชีพ และ ปัจจัยทุนการศึกษา")
-    
+    st.caption("ข้อมูลส่วนนี้จะถูกใช้เพื่อกรองสถาบันการศึกษาและทุนการศึกษาที่เหมาะสมกับคุณ")
+
     with st.form("form_step4"):
         user_goal_responses = {}
-        for q in GOAL_QUESTIONS:
+        for idx, q in enumerate(GOAL_QUESTIONS, 1):
+            st.markdown(f"""
+            <div class="sub-question-card" style="border-left-color: #10B981;">
+                <span class="category-badge">🚀 {q['category']}</span>
+                <div style="font-weight: 600; color: #1E293B; font-size: 1.05rem;">ข้อ {idx}. {q['text']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            col_ans, col_space = st.columns([1, 2])
+            with col_ans:
+                ans = st.radio(
+                    f"ตอบข้อ {idx}:", 
+                    ["ใช่", "ไม่ใช่"], 
+                    index=1, 
+                    horizontal=True, 
+                    key=q["id"],
+                    label_visibility="collapsed"
+                )
+
             user_goal_responses[q["id"]] = {
                 "category": q["category"],
-                "ans": st.radio(q["text"], ["ใช่", "ไม่ใช่"], index=1, horizontal=True, key=q["id"])
+                "ans": ans
             }
-            st.divider()
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="sub-question-card" style="border-left-color: #F59E0B;">
+            <span class="category-badge">💰 ทุนการศึกษา</span>
+            <div style="font-weight: 600; color: #1E293B; font-size: 1.05rem;">เงื่อนไขด้านทุนทรัพย์ในการศึกษาต่อ:</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         capital = st.radio(
-            "เงื่อนไขด้านทุนทรัพย์ในการศึกษาต่อ:",
-            ["มีข้อจำกัดสูง (ต้องการทุนเรียนฟรี/จบแล้วมีงานทำทันที/คืนทุนไว)", "ไม่มีข้อจำกัด หรือมีทุนทรัพย์ปานกลางถึงสูง"]
+            "เงื่อนไขด้านทุนทรัพย์:",
+            ["มีข้อจำกัดสูง (ต้องการทุนเรียนฟรี/จบแล้วมีงานทำทันที/คืนทุนไว)", "ไม่มีข้อจำกัด หรือมีทุนทรัพย์ปานกลางถึงสูง"],
+            index=1,
+            label_visibility="collapsed"
         )
+
+        st.markdown("<br>", unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
         with col1:
@@ -356,23 +431,17 @@ elif st.session_state.step == 5:
 
     stack_info = MBTI_STACKS.get(predicted_type, MBTI_STACKS["ENTP"])
 
-    # 3. เตรียมประพจน์ตรรกศาสตร์
-    sub_math_val = sub_resp.get("sub_math", {})
-    sub_sci_val = sub_resp.get("sub_sci", {})
-    sub_art_val = sub_resp.get("sub_art", {})
-
-    a_math = (sub_math_val.get("ans") == "ใช่") if isinstance(sub_math_val, dict) else False
-    a_sci = (sub_sci_val.get("ans") == "ใช่") if isinstance(sub_sci_val, dict) else False
-    a_art = (sub_art_val.get("ans") == "ใช่") if isinstance(sub_art_val, dict) else False
+    # 3. ตรวจสอบเงื่อนไขจากคำถามย่อยหมวดวิชา
+    a_math = any(sub_resp.get(f"sub_math_{i}", {}).get("ans") == "ใช่" for i in range(1, 4))
+    a_sci = any(sub_resp.get(f"sub_sci_{i}", {}).get("ans") == "ใช่" for i in range(1, 4))
+    a_art = any(sub_resp.get(f"sub_art_{i}", {}).get("ans") == "ใช่" for i in range(1, 4))
     c_low = "มีข้อจำกัดสูง" in capital if capital else False
 
     rule_tech = (func_scores["Ti"] >= 12 or func_scores["Te"] >= 12) and a_math
     rule_health = (func_scores["Fe"] >= 12 or func_scores["Si"] >= 12) and a_sci
     rule_creative = (func_scores["Ne"] >= 12 or a_art)
 
-    # ----------------------------------------------------
-    # ส่วนหัวสรุป MBTI Hero Card
-    # ----------------------------------------------------
+    # Header MBTI Hero Card
     st.markdown(f"""
     <div class="mbti-hero-card">
         <div style="font-size: 1.2rem; opacity: 0.9;">ผลการประมวลผลบุคลิกภาพของคุณคือ</div>
@@ -381,18 +450,12 @@ elif st.session_state.step == 5:
     </div>
     """, unsafe_allow_html=True)
 
-    # ----------------------------------------------------
-    # แบ่งการแสดงผลเป็น 3 แท็บ (Tabs)
-    # ----------------------------------------------------
     tab1, tab2, tab3 = st.tabs([
         "✨ สรุป MBTI & Cognitive Functions", 
         "🎓 คณะ/อาชีพ & แผนการเรียนตามงบ", 
         "📐 การพิสูจน์ตรรกศาสตร์"
     ])
 
-    # ==========================================
-    # TAB 1: MBTI & กราฟแท่ง
-    # ==========================================
     with tab1:
         st.subheader("🧩 ลำดับกระบวนการทางความคิด (Cognitive Function Hierarchy)")
         st.caption("สมองของคุณประมวลผลข้อมูลและตัดสินใจผ่านฟังก์ชันหลัก 4 ลำดับนี้:")
@@ -440,15 +503,11 @@ elif st.session_state.step == 5:
         fig.update_traces(textposition='inside', textfont_size=14)
         st.plotly_chart(fig, use_container_width=True)
 
-    # ==========================================
-    # TAB 2: คณะ/อาชีพ & แผนการเรียนตามงบ
-    # ==========================================
     with tab2:
         st.subheader("🎓 คณะที่แนะนำ แนวทางการเรียน และมหาวิทยาลัยตามงบประมาณ")
 
         if rule_tech:
             st.success("### 💻 กลุ่มเทคโนโลยี คำนวณ และวิศวกรรม")
-            
             st.markdown("#### 💡 เหตุผลที่เหมาะกับสายนี้:")
             st.write("สมองของคุณเด่นด้านฟังก์ชันตรรกะและการคิดวิเคราะห์ ชอบหาเหตุผลเบื้องหลังของสิ่งต่างๆ และชอบความท้าทายในการแก้ปัญหาเชิงระบบ สายนี้ตอบโจทย์ความสามารถของคุณมากที่สุด")
             
@@ -475,7 +534,6 @@ elif st.session_state.step == 5:
 
         elif rule_health:
             st.success("### 🏥 กลุ่มวิทยาศาสตร์ สุขภาพ และการดูแล")
-            
             st.markdown("#### 💡 เหตุผลที่เหมาะกับสายนี้:")
             st.write("คุณมีความละเอียดรอบคอบ ละเอียดอ่อนต่อความรู้สึกของผู้คนรอบข้าง หรือชอบความมั่นคงและทำตามขั้นตอนที่เป็นระบบ งานสายนี้ต้องการความใส่ใจและความรับผิดชอบสูง ซึ่งตรงกับจุดแข็งของคุณ")
             
@@ -499,7 +557,6 @@ elif st.session_state.step == 5:
 
         elif rule_creative:
             st.success("### 🎨 กลุ่มสร้างสรรค์ นวัตกรรม และสื่อดิจิทัล")
-            
             st.markdown("#### 💡 เหตุผลที่เหมาะกับสายนี้:")
             st.write("สมองของคุณเด่นด้านจินตนาการและการมองหาความเป็นไปได้ใหม่ๆ (Extraverted Intuition) ชอบความยืดหยุ่น คิดนอกกรอบ และไม่ชอบการถูกจำกัดให้อยู่ในกฎเกณฑ์ที่ซ้ำซาก")
             
@@ -524,7 +581,6 @@ elif st.session_state.step == 5:
 
         else:
             st.success("### 🏛️ กลุ่มบริหารจัดการ สังคมศาสตร์ และภาษา")
-            
             st.markdown("#### 💡 เหตุผลที่เหมาะกับสายนี้:")
             st.write("คุณมีทักษะในการประเมินคุณค่า การสื่อสารกับผู้คน หรือการจัดระเบียบงานและองค์กร สายงานนี้ต้องการคนที่ยืดหยุ่น สามารถทำงานร่วมกับคนหลากหลายรูปแบบได้อย่างราบรื่น")
             
@@ -549,9 +605,6 @@ elif st.session_state.step == 5:
                     * มหาวิทยาลัยหอการค้าไทย (เด่นสายธุรกิจ คอนเนกชันหอการค้า), มหาวิทยาลัยกรุงเทพ
                 """)
 
-    # ==========================================
-    # TAB 3: พิสูจน์ตรรกศาสตร์
-    # ==========================================
     with tab3:
         st.subheader("📐 โครงสร้างการพิสูจน์ทางตรรกศาสตร์ (Logic Proof)")
         st.caption("อธิบายกระบวนการคำนวณเบื้องหลังด้วยทฤษฎีประพจน์ทางคณิตศาสตร์")
