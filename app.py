@@ -21,6 +21,42 @@ st.markdown("""
 <style>
     .stApp { background-color: #F8FAFC; }
     
+    /* การ์ดคำถามแบบสอบถาม Step 1 */
+    .question-card {
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .question-badge {
+        display: inline-block;
+        background-color: #EFF6FF;
+        color: #2563EB;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+    }
+    .question-text {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* สเกลความหมาย 1 - 5 */
+    .scale-guide {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #64748B;
+        margin-top: 0.2rem;
+    }
+
+    /* การ์ดสรุปผล MBTI */
     .mbti-hero-card {
         background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
         color: white;
@@ -105,43 +141,105 @@ FUNC_DESCRIPTIONS = {
     "Fi": "ยึดมั่นค่านิยมส่วนตัว ความจริงแท้ จริงใจกับความรู้สึก"
 }
 
-# ตัวแปรจัดการขั้นตอน
+# ตัวแปรจัดการขั้นตอนหลัก
 TOTAL_STEPS = 5
 if "step" not in st.session_state:
     st.session_state.step = 1
+
+# ตัวแปรสำหรับแบ่งคำถามใน Step 1 (Pagination)
+QUESTIONS_PER_PAGE = 10
+TOTAL_COG_QUESTIONS = len(COGNITIVE_QUESTIONS)
+TOTAL_COG_PAGES = (TOTAL_COG_QUESTIONS + QUESTIONS_PER_PAGE - 1) // QUESTIONS_PER_PAGE
+
+if "cog_page" not in st.session_state:
+    st.session_state.cog_page = 0
+
+if "user_cog_responses" not in st.session_state:
+    st.session_state.user_cog_responses = {}
 
 progress_val = min((st.session_state.step - 1) / (TOTAL_STEPS - 1), 1.0)
 st.progress(progress_val)
 
 
 # ==========================================
-# STEP 1: Cognitive Functions (80 ข้อ)
+# STEP 1: แบบประเมิน Cognitive Functions (แบ่งหน้าสไตล์มินิมอล)
 # ==========================================
 if st.session_state.step == 1:
-    st.subheader("🧠 ส่วนที่ 1: แบบประเมิน Cognitive Functions")
-    st.caption("เลือกระดับคะแนน 1 (ไม่ตรงเลย) ถึง 5 (ตรงมากที่สุด)")
-    
-    with st.form("form_step1"):
-        user_cog_responses = {}
-        for q in COGNITIVE_QUESTIONS:
-            st.markdown(f"**{q['text']}**")
-            user_cog_responses[q["id"]] = {
-                "func": q["func"],
-                "score": st.radio(
-                    "คะแนน:",
-                    options=[1, 2, 3, 4, 5],
-                    index=2,
-                    horizontal=True,
-                    key=q["id"],
-                    label_visibility="collapsed"
-                )
-            }
-            st.divider()
+    current_page = st.session_state.cog_page
+    start_idx = current_page * QUESTIONS_PER_PAGE
+    end_idx = min(start_idx + QUESTIONS_PER_PAGE, TOTAL_COG_QUESTIONS)
+    current_questions = COGNITIVE_QUESTIONS[start_idx:end_idx]
 
-        if st.form_submit_button("ถัดไป: เลือกวิชาความถนัด ➔", use_container_width=True):
-            st.session_state.user_cog_responses = user_cog_responses
-            st.session_state.step = 2
+    # ส่วนหัวและแถบสถานะประจำย่อย
+    st.subheader("🧠 ส่วนที่ 1: แบบประเมิน Cognitive Functions")
+    
+    col_p1, col_p2 = st.columns([3, 1])
+    with col_p1:
+        st.caption(f"📌 **หน้า {current_page + 1} จาก {TOTAL_COG_PAGES}** (คำถามข้อที่ {start_idx + 1} - {end_idx} จากทั้งหมด {TOTAL_COG_QUESTIONS} ข้อ)")
+    with col_p2:
+        sub_progress = (current_page + 1) / TOTAL_COG_PAGES
+        st.progress(sub_progress)
+
+    # คำอธิบายระดับคะแนน
+    st.info("💡 **ระดับการให้คะแนน:** 1 = ไม่ตรงเลย | 2 = ไม่ค่อยตรง | 3 = ปานกลาง | 4 = ค่อนข้างตรง | 5 = ตรงมากที่สุด")
+
+    with st.form(key=f"form_step1_page_{current_page}"):
+        page_responses = {}
+        
+        for idx, q in enumerate(current_questions, start=start_idx + 1):
+            st.markdown(f"""
+            <div class="question-card">
+                <div class="question-badge">คำถามข้อที่ {idx} / {TOTAL_COG_QUESTIONS}</div>
+                <div class="question-text">{q['text']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # ดึงค่าเดิมที่เคยตอบไว้ (ถ้ามี) ถ้าไม่มีให้ค่าเริ่มต้นเป็น 3
+            saved_score = st.session_state.user_cog_responses.get(q["id"], {}).get("score", 3)
+
+            selected_score = st.radio(
+                label=f"เลือกคะแนนสำหรับข้อ {idx}",
+                options=[1, 2, 3, 4, 5],
+                index=saved_score - 1,
+                horizontal=True,
+                key=f"q_{q['id']}",
+                label_visibility="collapsed"
+            )
+
+            page_responses[q["id"]] = {
+                "func": q["func"],
+                "score": selected_score
+            }
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        # ปุ่มควบคุมหน้าย่อย
+        col_btn1, col_btn2 = st.columns(2)
+        
+        with col_btn1:
+            if current_page > 0:
+                submit_prev = st.form_submit_button("⬅ หน้าก่อนหน้า", use_container_width=True)
+            else:
+                submit_prev = False
+
+        with col_btn2:
+            if current_page < TOTAL_COG_PAGES - 1:
+                submit_next = st.form_submit_button("หน้าถัดไป ➔", use_container_width=True)
+            else:
+                submit_next = st.form_submit_button("ถัดไป: เลือกวิชาความถนัด ➔", use_container_width=True)
+
+        if submit_prev:
+            st.session_state.user_cog_responses.update(page_responses)
+            st.session_state.cog_page -= 1
             st.rerun()
+
+        if submit_next:
+            st.session_state.user_cog_responses.update(page_responses)
+            if current_page < TOTAL_COG_PAGES - 1:
+                st.session_state.cog_page += 1
+                st.rerun()
+            else:
+                st.session_state.step = 2
+                st.rerun()
 
 # ==========================================
 # STEP 2: วิชาที่ชอบ
@@ -228,7 +326,7 @@ elif st.session_state.step == 4:
                 st.rerun()
 
 # ==========================================
-# STEP 5: หน้าสรุปผลลัพธ์ (แก้ไขเรื่องตัวหนังสือหลุดเป็นโค้ดแล้ว)
+# STEP 5: หน้าสรุปผลลัพธ์
 # ==========================================
 elif st.session_state.step == 5:
     st.balloons()
@@ -343,7 +441,7 @@ elif st.session_state.step == 5:
         st.plotly_chart(fig, use_container_width=True)
 
     # ==========================================
-    # TAB 2: คณะ/อาชีพ & แผนการเรียนตามงบ (แก้ให้แสดงผลตัวหนังสือปกติ ไม่ขึ้นโค้ด)
+    # TAB 2: คณะ/อาชีพ & แผนการเรียนตามงบ
     # ==========================================
     with tab2:
         st.subheader("🎓 คณะที่แนะนำ แนวทางการเรียน และมหาวิทยาลัยตามงบประมาณ")
@@ -482,4 +580,6 @@ elif st.session_state.step == 5:
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔄 ทำแบบประเมินใหม่อีกครั้ง", use_container_width=True):
         st.session_state.step = 1
+        st.session_state.cog_page = 0
+        st.session_state.user_cog_responses = {}
         st.rerun()
