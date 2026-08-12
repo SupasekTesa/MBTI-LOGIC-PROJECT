@@ -112,6 +112,22 @@ st.markdown("""
         color: #475569;
     }
 
+    /* การ์ดอาชีพแนะนำ */
+    .career-card {
+        background: white;
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .career-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #0F172A;
+        margin: 0.4rem 0;
+    }
+
     .logic-box {
         background-color: #0F172A;
         color: #38BDF8;
@@ -153,6 +169,7 @@ FUNC_DESCRIPTIONS = {
     "Fe": "แคร์ความรู้สึกกลุ่ม สร้างบรรยากาศ มารยาทสังคม",
     "Fi": "ยึดมั่นค่านิยมส่วนตัว ความจริงแท้ จริงใจกับความรู้สึก"
 }
+
 # ==========================================
 # ฐานข้อมูลวิเคราะห์อาชีพเชิงลึกตาม MBTI
 # ==========================================
@@ -318,6 +335,7 @@ MBTI_CAREER_ANALYSIS = {
         ]
     }
 }
+
 # ตัวแปรจัดการขั้นตอนหลัก
 TOTAL_STEPS = 5
 if "step" not in st.session_state:
@@ -504,7 +522,7 @@ elif st.session_state.step == 3:
                 st.rerun()
 
 # ==========================================
-# STEP 4: การเงิน/เป้าหมายอาชีพ (5 ข้อทุนการศึกษา)
+# STEP 4: การเงิน/เป้าหมายอาชีพ
 # ==========================================
 elif st.session_state.step == 4:
     st.subheader("💼 ส่วนที่ 4: เป้าหมายอาชีพ และ ปัจจัยทุนการศึกษา")
@@ -581,8 +599,15 @@ elif st.session_state.step == 5:
 
     cog_resp = st.session_state.get("user_cog_responses", {})
     sub_resp = st.session_state.get("user_sub_responses", {})
+    goal_resp = st.session_state.get("user_goal_responses", {})
     fin_resp = st.session_state.get("user_fin_responses", {})
     capital = st.session_state.get("capital", "")
+
+    # ดึงค่าตอบคำถามการเงินเพื่อใช้ประมวลผล
+    budget_choice = str(fin_resp.get("fin_budget", capital))
+    scholarship_need = str(fin_resp.get("fin_scholarship", ""))
+    debt_burden = str(fin_resp.get("fin_debt", ""))
+    job_goal = " ".join([str(v) for v in goal_resp.values()]) + " " + " ".join([str(v) for v in fin_resp.values()])
 
     # 1. คำนวณคะแนน Cognitive Functions
     func_scores = {"Ne": 0, "Ni": 0, "Se": 0, "Si": 0, "Te": 0, "Ti": 0, "Fe": 0, "Fi": 0}
@@ -677,7 +702,7 @@ elif st.session_state.step == 5:
         fig.update_traces(textposition='inside', textfont_size=14)
         st.plotly_chart(fig, use_container_width=True)
 
-with tab2:
+    with tab2:
         st.subheader("🎓 วิเคราะห์เส้นทางอาชีพและสถาบันการศึกษาตามโปรไฟล์ของคุณ")
 
         # ดึงข้อมูล MBTI ที่ประมวลผลได้
