@@ -170,9 +170,7 @@ FUNC_DESCRIPTIONS = {
     "Fi": "ยึดมั่นค่านิยมส่วนตัว ความจริงแท้ จริงใจกับความรู้สึก"
 }
 
-# ==========================================
 # ฐานข้อมูลวิเคราะห์อาชีพเชิงลึกตาม MBTI
-# ==========================================
 MBTI_CAREER_ANALYSIS = {
     "ENTP": {
         "cognitive_style": "ใช้ Extraverted Intuition (Ne) สำรวจความเป็นไปได้ใหม่ๆ ร่วมกับ Introverted Thinking (Ti) ที่วิเคราะห์โครงสร้างตรรกะอย่างเฉียบแหลม",
@@ -655,14 +653,10 @@ elif st.session_state.step == 5:
         "📐 การพิสูจน์ตรรกศาสตร์"
     ])
 
-with tab1:
+    with tab1:
         st.subheader(f"🌟 วิเคราะห์ลักษณะบุคลิกภาพเชิงลึกของ {predicted_type}")
         st.caption("สรุปภาพรวมตัวตน กระบวนการคิด และจุดเด่นจุดควรระวังตามหลักวิทยาศาสตร์บุคลิกภาพ")
 
-        # --------------------------------------------------------
-        # 1. รายละเอียดเจาะลึกตามประเภท MBTI
-        # --------------------------------------------------------
-        # สร้างคำอธิบายสไตล์การคิดและภาพรวมสำหรับประเภทต่างๆ (มีค่าสำรองหากไม่ตรง)
         mbti_details = {
             "ENTP": {
                 "overview": "คุณเป็นนักคิดค้นที่เปี่ยมไปด้วยพลังสร้างสรรค์ สนุกกับการท้าทายกรอบความคิดเดิมๆ ชอบวิเคราะห์โครงสร้างปัญหา และมองเห็นโอกาสใหม่ๆ ที่คนอื่นมองไม่เห็นเสมอ คุณมีวาทศิลป์ดี มีไหวพริบ และเรียนรู้สิ่งใหม่ได้รวดเร็ว",
@@ -678,13 +672,10 @@ with tab1:
                 "weaknesses": ["อาจสงสัยและลังเลในความคิดตัวเองจนตัดสินใจช้า", "มักละเลยความรู้สึกของตัวเองและผู้อื่น", "เบื่องานเอกสารหรืองานระบบราชการ"],
                 "work_style": "ชอบทำงานคนเดียวในพื้นที่สงบๆ มีสมาธิสูง ได้แก้โจทย์ยากๆ โดยไม่มีใครมากดดันหรือควบคุมขั้นตอน"
             }
-            # สามารถเพิ่มรายละเอียดของ MBTI ประเภทอื่นๆ ในโครงสร้างเดียวกันนี้ได้
         }
 
-        # ดึงข้อมูลมาแสดงผล (ใช้ ENTP เป็นค่าเริ่มต้นถ้าไม่พบใน Dict)
         detail = mbti_details.get(predicted_type, mbti_details["ENTP"])
 
-        # แสดงกล่องภาพรวมบุคลิกภาพ
         st.markdown(f"""
         <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
             <h4 style="color: #1E3A8A; margin-top:0;">📝 ภาพรวมตัวตน (Personality Overview)</h4>
@@ -696,14 +687,11 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-        # --------------------------------------------------------
-        # 2. แสดงจุดแข็ง & จุดที่ควรระวัง
-        # --------------------------------------------------------
         col_s1, col_s2 = st.columns(2)
         
         with col_s1:
             st.markdown("""
-            <div style="background-color: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 1.2rem; height: 100%;">
+            <div style="background-color: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
                 <h4 style="color: #166534; margin-top:0;">💪 จุดเด่นที่คุณโดดเด่น (Strengths)</h4>
             </div>
             """, unsafe_allow_html=True)
@@ -712,7 +700,7 @@ with tab1:
 
         with col_s2:
             st.markdown("""
-            <div style="background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; padding: 1.2rem; height: 100%;">
+            <div style="background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
                 <h4 style="color: #991B1B; margin-top:0;">⚠️ จุดที่ควรระวัง & พัฒนา (Blind Spots)</h4>
             </div>
             """, unsafe_allow_html=True)
@@ -721,9 +709,6 @@ with tab1:
 
         st.divider()
 
-        # --------------------------------------------------------
-        # 3. ลำดับ Cognitive Functions & กราฟคะแนน
-        # --------------------------------------------------------
         st.subheader("🧩 ลำดับกระบวนการทางความคิด (Cognitive Function Hierarchy)")
         st.caption("สมองของคุณประมวลผลข้อมูลและตัดสินใจผ่านฟังก์ชันหลัก 4 ลำดับนี้:")
 
@@ -773,12 +758,8 @@ with tab1:
     with tab2:
         st.subheader("🎓 วิเคราะห์เส้นทางอาชีพและสถาบันการศึกษาตามโปรไฟล์ของคุณ")
 
-        # ดึงข้อมูล MBTI ที่ประมวลผลได้
         mbti_career_info = MBTI_CAREER_ANALYSIS.get(predicted_type, MBTI_CAREER_ANALYSIS["ENTP"])
 
-        # --------------------------------------------------------
-        # 1. กล่องวิเคราะห์เจาะลึกทำไม MBTI ของผู้ใช้จึงเหมาะกับสายงานนี้
-        # --------------------------------------------------------
         st.markdown(f"""
         <div style="background-color: #EFF6FF; border-left: 6px solid #2563EB; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.8rem;">
             <h3 style="color: #1E3A8A; margin-top:0;">🧠 ทำไมบุคลิกภาพ {predicted_type} ({stack_info['Title']}) ถึงเหมาะกับสายงานนี้?</h3>
