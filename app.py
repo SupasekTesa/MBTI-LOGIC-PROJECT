@@ -961,6 +961,7 @@ elif st.session_state.step == 5:
         • p_Dom = {top_func} (ฟังก์ชันหลักที่ได้คะแนนสูงสุด)<br>
         • a_math (ชอบสายคำนวณ) = {a_math}<br>
         • a_sci (ชอบสายวิทย์) = {a_sci}<br>
+        • a_art (ชอบสายศิลป์/สร้างสรรค์) = {a_art}<br>
         • c_low (เงื่อนไขข้อจำกัดทุนสูง) = {c_low}<br><br>
         
         <b>3. การสรุปผลตามกฎเงื่อนไข (Rule Inference):</b><br>
@@ -969,10 +970,3 @@ elif st.session_state.step == 5:
         • Rule_Creative = (Ne ∨ a_art) → <b>{rule_creative}</b>
         </div>
         """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🔄 ทำแบบประเมินใหม่อีกครั้ง", use_container_width=True):
-        st.session_state.step = 1
-        st.session_state.cog_page = 0
-        st.session_state.user_cog_responses = {}
-        st.rerun()
