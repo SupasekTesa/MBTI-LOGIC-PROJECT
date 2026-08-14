@@ -853,8 +853,7 @@ elif st.session_state.step == 5:
         )
         fig.update_traces(textposition='inside', textfont_size=14)
         st.plotly_chart(fig, use_container_width=True)
-
-   with tab2:
+with tab2:
         st.subheader("🎓 วิเคราะห์เส้นทางอาชีพและสถาบันการศึกษาตามโปรไฟล์ของคุณ")
 
         mbti_career_info = MBTI_CAREER_ANALYSIS.get(predicted_type, MBTI_CAREER_ANALYSIS["ENTP"])
