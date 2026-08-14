@@ -971,7 +971,18 @@ elif st.session_state.step == 5:
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔄 ทำแบบประเมินใหม่อีกครั้ง", use_container_width=True):
-        st.session_state.step = 1
-        st.session_state.cog_page = 0
-        st.session_state.user_cog_responses = {}
-        st.rerun()
+    # ลิสต์ตัวแปรที่ต้องการรีเซ็ตทั้งหมด
+    keys_to_clear = [
+        'step', 'cog_page', 'user_cog_responses', 
+        'user_sub_responses', 'user_hob_responses', 
+        'user_goal_responses', 'user_fin_responses', 'capital'
+    ]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+            
+    # ตั้งค่าเริ่มต้นใหม่
+    st.session_state.step = 1
+    st.session_state.cog_page = 0
+    st.session_state.user_cog_responses = {}
+    st.rerun()
