@@ -553,8 +553,7 @@ elif st.session_state.step == 4:
             st.markdown("<br>", unsafe_allow_html=True)
 
         st.divider()
-
-        # 2. คำถามเจาะลึกการเงินและทุนทรัพย์ 5 ข้อ
+# 2. คำถามเจาะลึกการเงินและทุนทรัพย์ 5 ข้อ
         st.markdown("#### 💰 2. เงื่อนไขด้านทุนทรัพย์และภาระทางการเงิน (5 ข้อ)")
         
         user_fin_responses = {}
@@ -583,7 +582,9 @@ elif st.session_state.step == 4:
                 st.rerun()
         with col2:
             if st.form_submit_button("🚀 ประมวลผลและดูผลลัพธ์", use_container_width=True):
-                st.session_state.user_goal_responses = user_goal_responses
+                # บันทึกค่าลง session_state
+                if 'user_goal_responses' in locals():
+                    st.session_state.user_goal_responses = user_goal_responses
                 st.session_state.user_fin_responses = user_fin_responses
                 st.session_state.capital = user_fin_responses.get("fin_budget", "")
                 st.session_state.step = 5
