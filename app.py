@@ -854,7 +854,7 @@ elif st.session_state.step == 5:
         fig.update_traces(textposition='inside', textfont_size=14)
         st.plotly_chart(fig, use_container_width=True)
 
-    with tab2:
+   with tab2:
         st.subheader("🎓 วิเคราะห์เส้นทางอาชีพและสถาบันการศึกษาตามโปรไฟล์ของคุณ")
 
         mbti_career_info = MBTI_CAREER_ANALYSIS.get(predicted_type, MBTI_CAREER_ANALYSIS["ENTP"])
@@ -862,16 +862,56 @@ elif st.session_state.step == 5:
         st.markdown(f"""
         <div style="background-color: #EFF6FF; border-left: 6px solid #2563EB; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.8rem;">
             <h3 style="color: #1E3A8A; margin-top:0;">🧠 ทำไมบุคลิกภาพ {predicted_type} ({stack_info['Title']}) ถึงเหมาะกับสายงานนี้?</h3>
-            <p style="color: #1E293B; font-size: 1.05rem;"><b>⚙️ กระบวนการคิดทางสมอง (Cognitive Mechanism):</b><br>{mbti_career_info['cognitive_style']}</p>
-            <p style="color: #1E293B; font-size: 1.05rem;"><b>💡 จุดเด่นทางบุคลิกภาพที่สอดคล้อง (Why You Fit):</b><br>{mbti_career_info['why_fit']}</p>
-            <p style="color: #1E293B; font-size: 1.05rem; margin-bottom:0;"><b>🏢 สภาพแวดล้อมการทำงานที่ดึงศักยภาพสูงสุด (Ideal Work Environment):</b><br>{mbti_career_info['work_environment']}</p>
+            <p style="color: #1E293B; font-size: 1.05rem;"><b>⚙️ กระบวนการคิดทางสมอง:</b><br>{mbti_career_info['cognitive_style']}</p>
+            <p style="color: #1E293B; font-size: 1.05rem;"><b>💡 จุดเด่นทางบุคลิกภาพที่สอดคล้อง:</b><br>{mbti_career_info['why_fit']}</p>
+            <p style="color: #1E293B; font-size: 1.05rem; margin-bottom:0;"><b>🏢 สภาพแวดล้อมการทำงานที่ดึงศักยภาพสูงสุด:</b><br>{mbti_career_info['work_environment']}</p>
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("### 💼 อาชีพเด่นที่ตอบโจทย์รูปแบบการคิดของคุณ")
+        # ==========================================
+        # 🔥 จุดที่แก้ไข: Dynamic Career Selection
+        # ==========================================
+        st.markdown("### 💼 อาชีพเด่นที่ตอบโจทย์ 'ความชอบวิชา' และ 'บุคลิกภาพ' ของคุณ")
+
+        # 1. สร้าง คลังอาชีพตามสายวิชา (Subject-Based Careers)
+        careers_db = {
+            "health": [
+                {"title": "พยาบาลวิชาการ / นักกายภาพบำบัด", "desc": "เน้นการดูแลและฟื้นฟูผู้ป่วยโดยใช้ความเห็นอกเห็นใจผสานกับความรู้ทางวิทยาศาสตร์"},
+                {"title": "นักจิตวิทยาปรึกษา / นักชีวอนามัย", "desc": "ใช้วาทศิลป์และการฟังอย่างเข้าใจเพื่อช่วยเหลือผู้คนในด้านสุขภาวะทางจิตและกาย"},
+                {"title": "นักโภชนาการ / นักวิจัยทางการแพทย์", "desc": "วางแผนและประยุกต์ความรู้ชีววิทยาเพื่อส่งเสริมสุขภาพของชุมชน"}
+            ],
+            "tech": [
+                {"title": "นักพัฒนาซอฟต์แวร์ / Data Analyst", "desc": "ใช้ตรรกะและการแก้ปัญหาเชิงระบบในการสร้างเทคโนโลยีหรือวิเคราะห์ข้อมูล"},
+                {"title": "นักออกแบบระบบ / IT Consultant", "desc": "เชื่อมโยงความต้องการของผู้ใช้งานเข้ากับโซลูชันทางเทคโนโลยี"},
+                {"title": "วิศวกรนวัตกรรม / AI Specialist", "desc": "คิดค้นและประยุกต์ใช้เทคโนโลยีใหม่ๆ เพื่อตอบโจทย์ภาคธุรกิจ"}
+            ],
+            "creative": [
+                {"title": "นักคิดคอนเซ็ปต์ / นักวางแผนสื่อสาร", "desc": "ใช้ความคิดสร้างสรรค์และภาษาในการสร้างสรรค์เนื้อหาและสร้างแรงบันดาลใจ"},
+                {"title": "UX/UI Designer / นักออกแบบประสบการณ์", "desc": "ผสมผสานความเข้าใจมนุษย์เข้ากับศิลปะเพื่อออกแบบผลิตภัณฑ์ที่ใช้งานง่าย"},
+                {"title": "ผู้กำกับศิลป์ / นักสื่อสารมวลชน", "desc": "ถ่ายทอดเรื่องราวและอุดมการณ์ผ่านสื่อรูปแบบต่างๆ"}
+            ],
+            "general": mbti_career_info.get('careers', []) # กรณีไม่ตรงเงื่อนไขวิชาใดเลย
+        }
+
+        # 2. คัดเลือกอาชีพตามประพจน์ทางตรรกศาสตร์
+        selected_careers = []
+        if a_sci or rule_health:
+            selected_careers = careers_db["health"]
+            st.caption("✨ *แนะนำพิเศษโดยอิงจากความสนใจในหมวดวิชาวิทยาศาสตร์/สุขภาพของคุณ*")
+        elif a_math or rule_tech:
+            selected_careers = careers_db["tech"]
+            st.caption("✨ *แนะนำพิเศษโดยอิงจากความสนใจในหมวดวิชาคำนวณ/เทคโนโลยีของคุณ*")
+        elif a_art or rule_creative:
+            selected_careers = careers_db["creative"]
+            st.caption("✨ *แนะนำพิเศษโดยอิงจากความสนใจในหมวดวิชาศิลปะ/ความคิดสร้างสรรค์ของคุณ*")
+        else:
+            selected_careers = careers_db["general"]
+            st.caption("✨ *แนะนำโดยอิงจากบุคลิกภาพ MBTI เป็นหลัก*")
+
+        # 3. แสดงผลอาชีพที่ผ่านการกรองแล้ว
         col_c1, col_c2, col_c3 = st.columns(3)
         career_cols = [col_c1, col_c2, col_c3]
-        for idx, car in enumerate(mbti_career_info['careers']):
+        for idx, car in enumerate(selected_careers):
             with career_cols[idx % 3]:
                 st.markdown(f"""
                 <div class="career-card">
@@ -880,7 +920,6 @@ elif st.session_state.step == 5:
                     <div style="color: #475569; font-size: 0.95rem; line-height: 1.5;">{car['desc']}</div>
                 </div>
                 """, unsafe_allow_html=True)
-
         st.divider()
 
         st.markdown("### 🏫 มหาวิทยาลัยและเส้นทางศึกษาต่อที่ 'ตรงกับทุนของคุณ'")
