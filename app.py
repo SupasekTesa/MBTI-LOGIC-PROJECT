@@ -68,41 +68,78 @@ if st.session_state.step == 1:
             for item in raw_answers.values():
                 func_scores[item["func"]] += item["score"]
 
-            # 2. คำนวณเปอร์เซ็นต์ความเด่นของแต่ละฟังก์ชัน
+            # 2. คำนวณเปอร์เซ็นต์คะแนนดิบสำหรับนำไปแสดงผลกราฟ
             func_percentages = {func: round((score / 50) * 100, 1) for func, score in func_scores.items()}
-
-            # 3. จัดลำดับฟังก์ชันจากมากไปน้อย
             sorted_funcs = sorted(func_scores.items(), key=lambda x: x[1], reverse=True)
-            
-            # บันทึกค่าลง session_state สำหรับนำไปแสดงผลละเอียด
+
+            # -------------------------------------------------------------------
+            # [วางโค้ดตรรกศาสตร์ MBTI ตรงนี้] (บรรทัดต่อจากคำนวณคะแนนดิบ)
+            # -------------------------------------------------------------------
+            # 3.1 หา Dominant (ฟังก์ชันที่คะแนนสูงสุด)
+            dom_func = max(func_scores, key=func_scores.get)
+
+            # 3.2 กำหนดตัวเลือก Auxiliary ที่ถูกต้องตามกฎทฤษฎี MBTI
+            possible_aux = []
+            if dom_func == "Ne":
+                possible_aux = ["Ti", "Fi"]
+            elif dom_func == "Ni":
+                possible_aux = ["Te", "Fe"]
+            elif dom_func == "Se":
+                possible_aux = ["Ti", "Fi"]
+            elif dom_func == "Si":
+                possible_aux = ["Te", "Fe"]
+            elif dom_func == "Te":
+                possible_aux = ["Ni", "Si"]
+            elif dom_func == "Ti":
+                possible_aux = ["Ne", "Se"]
+            elif dom_func == "Fe":
+                possible_aux = ["Ni", "Si"]
+            elif dom_func == "Fi":
+                possible_aux = ["Ne", "Se"]
+
+            # 3.3 เลือก Auxiliary โดยเทียบคะแนนระหว่างตัวเลือกที่ถูกต้องตามทฤษฎี
+            aux_func = max(possible_aux, key=lambda f: func_scores[f])
+
+            # 3.4 หา Tertiary และ Inferior จากคู่ตรงข้ามตามทฤษฎี
+            opposite_map = {
+                "Ne": "Si", "Si": "Ne",
+                "Ni": "Se", "Se": "Ni",
+                "Te": "Fi", "Fi": "Te",
+                "Ti": "Fe", "Fe": "Ti"
+            }
+            tertiary_func = opposite_map[aux_func]
+            inferior_func = opposite_map[dom_func]
+
+            # 4. บันทึกข้อมูลเข้า session_state
             st.session_state.func_scores = func_scores
             st.session_state.func_percentages = func_percentages
             st.session_state.sorted_funcs = sorted_funcs
-            st.session_state.top_functions = [f[0] for f in sorted_funcs[:4]]
-
-            # 4. คำนวณแกน MBTI ทั้ง 4 มิติเชิงปริมาณ
-            extroversion = func_scores["Ne"] + func_scores["Se"] + func_scores["Te"] + func_scores["Fe"]
-            introversion = func_scores["Ni"] + func_scores["Si"] + func_scores["Ti"] + func_scores["Fi"]
             
-            intuition = func_scores["Ne"] + func_scores["Ni"]
-            sensing = func_scores["Se"] + func_scores["Si"]
+            # บันทึก Cognitive Stack ที่ถูกต้องตามกฎ
+            st.session_state.mbti_stack = {
+                "Dom": dom_func,
+                "Aux": aux_func,
+                "Tert": tertiary_func,
+                "Inf": inferior_func
+            }
+
+            # 5. สรุปชื่อ MBTI Code จาก Dom และ Aux
+            # (เช่น Ne + Ti = ENTP, Ne + Fi = ENFP)
+            type_mapping = {
+                ("Ne", "Ti"): "ENTP", ("Ne", "Fi"): "ENFP",
+                ("Ni", "Te"): "INTJ", ("Ni", "Fe"): "INFJ",
+                ("Se", "Ti"): "ESTP", ("Se", "Fi"): "ESFP",
+                ("Si", "Te"): "ISTJ", ("Si", "Fe"): "ISFJ",
+                ("Te", "Ni"): "ENTJ", ("Te", "Si"): "ESTJ",
+                ("Ti", "Ne"): "INTP", ("Ti", "Se"): "ISTP",
+                ("Fe", "Ni"): "ENFJ", ("Fe", "Si"): "ESFJ",
+                ("Fi", "Ne"): "INFP", ("Fi", "Se"): "ISFP"
+            }
             
-            thinking = func_scores["Te"] + func_scores["Ti"]
-            feeling = func_scores["Fe"] + func_scores["Fi"]
-
-            perceiving = func_scores["Ne"] + func_scores["Se"]
-            judging = func_scores["Ni"] + func_scores["Si"]
-
-            dim_e_i = "E" if extroversion >= introversion else "I"
-            dim_n_s = "N" if intuition >= sensing else "S"
-            dim_t_f = "T" if thinking >= feeling else "F"
-            dim_p_j = "P" if perceiving >= judging else "J"
-
-            mbti_code = f"{dim_e_i}{dim_n_s}{dim_t_f}{dim_p_j}"
-            if mbti_code not in MBTI_DESCRIPTIONS:
-                mbti_code = "ENFP"
-                
+            mbti_code = type_mapping.get((dom_func, aux_func), "ENTP")
             st.session_state.mbti_result = mbti_code
+            
+            # 6. เปลี่ยนหน้าไปยัง Step 2
             st.session_state.step = 2
             st.rerun()
 
@@ -134,13 +171,14 @@ elif st.session_state.step == 2:
             st.progress(pct / 100)
             
     with col_rank:
+        with col_rank:
         st.markdown("**การจัดลำดับตามทฤษฎี (Cognitive Stack):**")
-        if len(sorted_funcs) >= 8:
-            st.write(f"🥇 **Dominant (ฟังก์ชันหลัก):** `{sorted_funcs[0][0]}` ({func_pct[sorted_funcs[0][0]]}%)")
-            st.write(f"🥈 **Auxiliary (ฟังก์ชันรอง):** `{sorted_funcs[1][0]}` ({func_pct[sorted_funcs[1][0]]}%)")
-            st.write(f"🥉 **Tertiary (ฟังก์ชันลำดับสาม):** `{sorted_funcs[2][0]}` ({func_pct[sorted_funcs[2][0]]}%)")
-            st.write(f"⚓ **Inferior (จุดที่ต้องพัฒนา):** `{sorted_funcs[-1][0]}` ({func_pct[sorted_funcs[-1][0]]}%)")
-
+        stack = st.session_state.get("mbti_stack", {})
+        if stack:
+            st.write(f"🥇 **Dominant (ฟังก์ชันหลัก):** `{stack['Dom']}` ({func_pct[stack['Dom']]}%)")
+            st.write(f"🥈 **Auxiliary (ฟังก์ชันรอง):** `{stack['Aux']}` ({func_pct[stack['Aux']]}%)")
+            st.write(f"🥉 **Tertiary (ฟังก์ชันลำดับสาม):** `{stack['Tert']}` ({func_pct[stack['Tert']]}%)")
+            st.write(f"⚓ **Inferior (จุดที่ต้องพัฒนา):** `{stack['Inf']}` ({func_pct[stack['Inf']]}%)")
     st.markdown("---")
     
     col1, col2 = st.columns(2)
