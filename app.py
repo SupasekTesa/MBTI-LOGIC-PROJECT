@@ -39,16 +39,15 @@ SCALE_OPTIONS = {
 }
 
 # ---------------------------------------------------------
-# STEP 1: ประเมิน Cognitive Functions (80 ข้อ)
+# STEP 1: ประเมิน Cognitive Functions (80 ข้อ + คำนวณละเอียด)
 # ---------------------------------------------------------
 if st.session_state.step == 1:
     st.title("🧩 ขั้นตอนที่ 1: ประเมินบุคลิกภาพ (Cognitive Functions 80 ข้อ)")
     st.write("โปรดเลือกสเกลที่ตรงกับความเป็นจริงของคุณมากที่สุด (1 = ไม่ตรงเลย, 5 = ตรงมากที่สุด)")
     
     with st.form("mbti_form"):
-        cog_responses = {}
-        
-        # วนลูปคำถาม 80 ข้อ
+        # เก็บคำตอบแยกตาม ID ข้อสอบเพื่อป้องกันข้อมูลตีกัน
+        raw_answers = {}
         for idx, q in enumerate(COGNITIVE_QUESTIONS, 1):
             st.markdown(f"**ข้อที่ {idx}:** {q['text']}")
             ans = st.radio(
@@ -58,30 +57,48 @@ if st.session_state.step == 1:
                 key=f"cog_{q['id']}",
                 horizontal=True
             )
-            cog_responses[q["func"]] = cog_responses.get(q["func"], 0) + SCALE_OPTIONS[ans]
+            raw_answers[q['id']] = {"func": q["func"], "score": SCALE_OPTIONS[ans]}
             st.markdown("<hr style='margin: 0.5rem 0 1.5rem 0;'>", unsafe_allow_html=True)
             
-        submitted = st.form_submit_button("🚀 ประมวลผลบุคลิกภาพ MBTI (Step 1)")
+        submitted = st.form_submit_button("🚀 ประมวลผลและคำนวณตรรกศาสตร์ MBTI (Step 1)")
         
         if submitted:
-            # รวมคะแนนหา Cognitive Functions หลัก
-            sorted_funcs = sorted(cog_responses.items(), key=lambda x: x[1], reverse=True)
-            top_funcs = [f[0] for f in sorted_funcs[:4]]
-            st.session_state.top_functions = top_funcs
+            # 1. รวมคะแนนแยกตามฟังก์ชัน (เต็ม 50 คะแนนต่อฟังก์ชัน)
+            func_scores = {"Ne": 0, "Ni": 0, "Se": 0, "Si": 0, "Te": 0, "Ti": 0, "Fe": 0, "Fi": 0}
+            for item in raw_answers.values():
+                func_scores[item["func"]] += item["score"]
+
+            # 2. คำนวณเปอร์เซ็นต์ความเด่นของแต่ละฟังก์ชัน
+            func_percentages = {func: round((score / 50) * 100, 1) for func, score in func_scores.items()}
+
+            # 3. จัดลำดับฟังก์ชันจากมากไปน้อย
+            sorted_funcs = sorted(func_scores.items(), key=lambda x: x[1], reverse=True)
             
-            # คำนวณรหัส MBTI เบื้องต้นจาก Cognitive Functions
-            ne_ni = cog_responses.get("Ne", 0) + cog_responses.get("Ni", 0)
-            se_si = cog_responses.get("Se", 0) + cog_responses.get("Si", 0)
-            ti_te = cog_responses.get("Ti", 0) + cog_responses.get("Te", 0)
-            fi_fe = cog_responses.get("Fi", 0) + cog_responses.get("Fe", 0)
+            # บันทึกค่าลง session_state สำหรับนำไปแสดงผลละเอียด
+            st.session_state.func_scores = func_scores
+            st.session_state.func_percentages = func_percentages
+            st.session_state.sorted_funcs = sorted_funcs
+            st.session_state.top_functions = [f[0] for f in sorted_funcs[:4]]
+
+            # 4. คำนวณแกน MBTI ทั้ง 4 มิติเชิงปริมาณ
+            extroversion = func_scores["Ne"] + func_scores["Se"] + func_scores["Te"] + func_scores["Fe"]
+            introversion = func_scores["Ni"] + func_scores["Si"] + func_scores["Ti"] + func_scores["Fi"]
             
-            p_or_s = "N" if ne_ni >= se_si else "S"
-            t_or_f = "T" if ti_te >= fi_fe else "F"
-            e_or_i = "E" if (cog_responses.get("Ne", 0) + cog_responses.get("Se", 0) + cog_responses.get("Te", 0) + cog_responses.get("Fe", 0)) >= \
-                           (cog_responses.get("Ni", 0) + cog_responses.get("Si", 0) + cog_responses.get("Ti", 0) + cog_responses.get("Fi", 0)) else "I"
-            j_or_p = "P" if (cog_responses.get("Ne", 0) + cog_responses.get("Se", 0)) >= (cog_responses.get("Ni", 0) + cog_responses.get("Si", 0)) else "J"
+            intuition = func_scores["Ne"] + func_scores["Ni"]
+            sensing = func_scores["Se"] + func_scores["Si"]
             
-            mbti_code = f"{e_or_i}{p_or_s}{t_or_f}{j_or_p}"
+            thinking = func_scores["Te"] + func_scores["Ti"]
+            feeling = func_scores["Fe"] + func_scores["Fi"]
+
+            perceiving = func_scores["Ne"] + func_scores["Se"]
+            judging = func_scores["Ni"] + func_scores["Si"]
+
+            dim_e_i = "E" if extroversion >= introversion else "I"
+            dim_n_s = "N" if intuition >= sensing else "S"
+            dim_t_f = "T" if thinking >= feeling else "F"
+            dim_p_j = "P" if perceiving >= judging else "J"
+
+            mbti_code = f"{dim_e_i}{dim_n_s}{dim_t_f}{dim_p_j}"
             if mbti_code not in MBTI_DESCRIPTIONS:
                 mbti_code = "ENFP"
                 
@@ -90,23 +107,41 @@ if st.session_state.step == 1:
             st.rerun()
 
 # ---------------------------------------------------------
-# STEP 2: สรุปผลลัพธ์ MBTI ทันที (คุยโต้ตอบทีละขั้น)
+# STEP 2: สรุปผลลัพธ์การคำนวณละเอียด
 # ---------------------------------------------------------
 elif st.session_state.step == 2:
-    st.title("🌟 ขั้นตอนที่ 2: สรุปผลลัพธ์บุคลิกภาพของคุณ")
+    st.title("🌟 ขั้นตอนที่ 2: สรุปผลลัพธ์และรายงานการคำนวณตรรกศาสตร์")
     
     mbti = st.session_state.mbti_result
     info = MBTI_DESCRIPTIONS.get(mbti, MBTI_DESCRIPTIONS["ENTP"])
-    funcs = st.session_state.top_functions
+    sorted_funcs = st.session_state.get("sorted_funcs", [])
+    func_pct = st.session_state.get("func_percentages", {})
+    func_raw = st.session_state.get("func_scores", {})
     
-    st.success(f"### ผลการวิเคราะห์: คุณมีบุคลิกภาพแบบ **{mbti}** ({info['title']})")
-    st.info(f"**ลักษณะตัวตนของคุณ:** {info['desc']}")
+    st.success(f"### ผลการวิเคราะห์: บุคลิกภาพของคุณคือ **{mbti}** ({info['title']})")
+    st.info(f"**ลักษณะตัวตน:** {info['desc']}")
     
-    if funcs:
-        st.write(f"🧩 **Cognitive Functions โดดเด่นของคุณ:** {', '.join(funcs)}")
+    # แสดงตารางวิเคราะห์ Cognitive Function Stack แบบละเอียด
+    st.subheader("📊 ตรรกศาสตร์การคำนวณ Cognitive Functions (คะแนนเต็ม 50 คะแนน)")
     
+    col_chart, col_rank = st.columns([3, 2])
+    
+    with col_chart:
+        st.markdown("**ระดับความเข้มข้นของแต่ละฟังก์ชัน (%):**")
+        for func_code, score in sorted_funcs:
+            pct = func_pct.get(func_code, 0)
+            st.write(f"**{func_code}**: {score}/50 คะแนน ({pct}%)")
+            st.progress(pct / 100)
+            
+    with col_rank:
+        st.markdown("**การจัดลำดับตามทฤษฎี (Cognitive Stack):**")
+        if len(sorted_funcs) >= 8:
+            st.write(f"🥇 **Dominant (ฟังก์ชันหลัก):** `{sorted_funcs[0][0]}` ({func_pct[sorted_funcs[0][0]]}%)")
+            st.write(f"🥈 **Auxiliary (ฟังก์ชันรอง):** `{sorted_funcs[1][0]}` ({func_pct[sorted_funcs[1][0]]}%)")
+            st.write(f"🥉 **Tertiary (ฟังก์ชันลำดับสาม):** `{sorted_funcs[2][0]}` ({func_pct[sorted_funcs[2][0]]}%)")
+            st.write(f"⚓ **Inferior (จุดที่ต้องพัฒนา):** `{sorted_funcs[-1][0]}` ({func_pct[sorted_funcs[-1][0]]}%)")
+
     st.markdown("---")
-    st.write("📌 *ยืนยันผลลัพธ์บุคลิกภาพข้างต้น แล้วกดไปต่อเพื่อทำแบบประเมินความชอบและเงื่อนไขของคุณ*")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -117,7 +152,6 @@ elif st.session_state.step == 2:
         if st.button("➡️ ไปต่อ: ประเมินความชอบ & ทุนการเงิน (Step 3)"):
             st.session_state.step = 3
             st.rerun()
-
 # ---------------------------------------------------------
 # STEP 3: ประเมินความชอบ วิชา งานอดิเรก เป้าหมาย ทุนการเงิน
 # ---------------------------------------------------------
