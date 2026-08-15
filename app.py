@@ -171,7 +171,6 @@ elif st.session_state.step == 2:
             st.progress(pct / 100)
             
     with col_rank:
-        with col_rank:
         st.markdown("**การจัดลำดับตามทฤษฎี (Cognitive Stack):**")
         stack = st.session_state.get("mbti_stack", {})
         if stack:
