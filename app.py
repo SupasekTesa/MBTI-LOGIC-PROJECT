@@ -2,9 +2,6 @@ import streamlit as st
 from questions import (
     COGNITIVE_QUESTIONS, 
     SUBJECT_QUESTIONS, 
-    HOBBY_QUESTIONS, 
-    GOAL_QUESTIONS, 
-    FINANCIAL_QUESTIONS,
     MBTI_DESCRIPTIONS
 )
 
@@ -24,8 +21,8 @@ if 'step' not in st.session_state:
     st.session_state.step = 1
 if 'mbti_result' not in st.session_state:
     st.session_state.mbti_result = "INTJ"
-if 'top_subject' not in st.session_state:
-    st.session_state.top_subject = None
+if 'top_subjects' not in st.session_state:
+    st.session_state.top_subjects = []
 
 SCALE_OPTIONS = {
     "1 - ไม่ตรงเลย": 1,
@@ -50,10 +47,10 @@ if st.session_state.step == 1:
                 f"ระดับความตรง (ข้อ {idx}):", 
                 options=list(SCALE_OPTIONS.keys()), 
                 index=2, 
-                key=f"cog_{q['id']}",
+                key=f"cog_{q.get('id', idx)}",
                 horizontal=True
             )
-            raw_answers[q['id']] = {"func": q["func"], "score": SCALE_OPTIONS[ans]}
+            raw_answers[q.get('id', idx)] = {"func": q["func"], "score": SCALE_OPTIONS[ans]}
             st.markdown("<hr style='margin: 0.5rem 0 1.5rem 0;'>", unsafe_allow_html=True)
             
         submitted = st.form_submit_button("🚀 ประมวลผล MBTI")
@@ -68,7 +65,6 @@ if st.session_state.step == 1:
 
             dom_func = max(func_scores, key=func_scores.get)
             
-            # กำหนดกลุ่มตัวเลือก Aux ตาม Dom แบบชัดเจน
             aux_candidates_map = {
                 "Ne": ["Ti", "Fi"], "Se": ["Ti", "Fi"],
                 "Ni": ["Te", "Fe"], "Si": ["Te", "Fe"],
@@ -114,7 +110,7 @@ if st.session_state.step == 1:
             st.rerun()
 
 # ---------------------------------------------------------
-# STEP 2: สรุปผล MBTI และแสดงสมการตรรกศาสตร์ (ปรับปรุงกำหนดประพจน์ชัดเจน)
+# STEP 2: สรุปผล MBTI และแสดงสมการตรรกศาสตร์
 # ---------------------------------------------------------
 elif st.session_state.step == 2:
     st.title("🌟 ขั้นตอนที่ 2: สรุปผลลัพธ์และแบบจำลองตรรกศาสตร์ MBTI")
@@ -149,9 +145,6 @@ elif st.session_state.step == 2:
             
     st.markdown("---")
 
-    # ---------------------------------------------------------
-    # แสดงตรรกศาสตร์ (กำหนดประพจน์เด่นชัด อ่านเข้าใจง่าย)
-    # ---------------------------------------------------------
     if stack:
         dom = stack['Dom']
         aux = stack['Aux']
@@ -167,13 +160,11 @@ elif st.session_state.step == 2:
             st.write(f"* **ประพจน์ $M_{{{mbti}}}$**: ผู้เรียนมีบุคลิกภาพแบบ {mbti} `(True)`")
             
             st.markdown("---")
-
             st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการตัดสิน Dominant (ฟังก์ชันหลัก)")
             st.latex(rf"A \iff (\text{{Dom}} = \text{{{dom}}})")
             st.caption(f"อธิบาย: ประพจน์ A เป็นจริง ก็ต่อเมื่อ กำหนดให้ Dominant Function คือ {dom}")
 
             st.markdown("---")
-
             st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง) และการตัดสินประเภท")
             st.latex(rf"B \iff (\text{{Aux}} = \text{{{aux}}})")
             st.caption(f"อธิบาย: ประพจน์ B เป็นจริง ก็ต่อเมื่อ กำหนดให้ Auxiliary Function คือ {aux}")
@@ -183,13 +174,9 @@ elif st.session_state.step == 2:
             st.write(f"* **สรุปตรรกศาสตร์:** (ประพจน์ $A$ เป็นจริง) $\\land$ (ประพจน์ $B$ เป็นจริง) $\\implies$ สรุปว่าเป็นประพจน์ **$M_{{{mbti}}}$**")
 
             st.markdown("---")
-
             st.markdown("### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ $\iff$)")
-            st.write("ฟังก์ชันคู่ตรงข้ามตามโครงสร้าง Cognitive Stack มีความสมมูลกันแบบ 2 ทาง:")
-            
             st.latex(rf"(\text{{Dom}} = \text{{{dom}}}) \iff (\text{{Inferior}} = \text{{{inf}}})")
             st.latex(rf"(\text{{Aux}} = \text{{{aux}}}) \iff (\text{{Tertiary}} = \text{{{tert}}})")
-            st.caption(f"อธิบาย: เมื่อ Dom เป็น {dom} แล้ว Inferior จะเป็น {inf} เสมอ และเมื่อ Aux เป็น {aux} แล้ว Tertiary จะเป็น {tert} เสมอ")
 
     st.markdown("---")
     if st.button("➡️ ไปต่อ: เลือกความชอบวิชาเพื่อสร้างประพจน์ความชอบ (Step 3)"):
@@ -197,7 +184,7 @@ elif st.session_state.step == 2:
         st.rerun()
 
 # ---------------------------------------------------------
-# STEP 3: ประเมินวิชาที่ชอบ และกำหนดประพจน์วิชา
+# STEP 3: ประเมินวิชาที่ชอบ และกำหนดประพจน์วิชา (ปรับปรุงให้อัปเดตตาม questions.py เสมอ)
 # ---------------------------------------------------------
 elif st.session_state.step == 3:
     st.title("📚 ขั้นตอนที่ 3: สรุปประพจน์ความชอบวิชา (Subject Propositions)")
@@ -205,21 +192,25 @@ elif st.session_state.step == 3:
     
     with st.form("subject_form"):
         sub_scores = {}
-        for q in SUBJECT_QUESTIONS:
+        for idx, q in enumerate(SUBJECT_QUESTIONS, 1):
+            q_id = q.get('id', idx)
+            st.markdown(f"**ข้อที่ {idx}:** {q['text']} *(หมวด: {q['category']})*")
             ans = st.radio(
-                f"วิชา: {q['text']} ({q['category']}):", 
+                f"ระดับความตรง ({q_id}):", 
                 options=list(SCALE_OPTIONS.keys()), 
                 index=2, 
-                key=f"sub_{q['id']}", 
+                key=f"sub_{q_id}", 
                 horizontal=True
             )
             sub_scores[q["category"]] = sub_scores.get(q["category"], 0) + SCALE_OPTIONS[ans]
+            st.markdown("<hr style='margin: 0.3rem 0 1rem 0;'>", unsafe_allow_html=True)
             
         submitted_step3 = st.form_submit_button("🚀 สรุปประพจน์ความชอบและตรวจสอบเงื่อนไข (Step 4)")
         
         if submitted_step3:
             sorted_subjects = sorted(sub_scores.items(), key=lambda x: x[1], reverse=True)
             st.session_state.sub_scores = sub_scores
+            # เก็บหมวดวิชาที่ได้คะแนนสูงสุด 2 อันดับแรก
             st.session_state.top_subjects = [s[0] for s in sorted_subjects[:2]]
             st.session_state.step = 4
             st.rerun()
@@ -233,13 +224,16 @@ elif st.session_state.step == 4:
     mbti = st.session_state.mbti_result
     top_subs = st.session_state.get("top_subjects", [])
 
-    is_math = "Math & Logic" in top_subs or "คณิตศาสตร์/ฟิสิกส์" in top_subs
-    is_sci = "Natural Science" in top_subs or "วิทยาศาสตร์/เคมี/ชีวา" in top_subs
-    is_art = "Art & Design" in top_subs or "ศิลปะ/ออกแบบ" in top_subs
-    is_tech = "Technology" in top_subs or "คอมพิวเตอร์/เทคโนโลยี" in top_subs
+    # ฟังก์ชันช่วยตรวจเช็กหมวดวิชาแบบรองรับทั้งคำไทยและคำอังกฤษ
+    def check_subject(keywords, target_list):
+        return any(any(kw.lower() in sub.lower() for kw in keywords) for sub in target_list)
+
+    is_math = check_subject(["math", "คณิต"], top_subs)
+    is_sci = check_subject(["science", "วิทย์", "ชีว", "เคมี"], top_subs)
+    is_art = check_subject(["art", "ศิลปะ", "ออกแบบ", "design"], top_subs)
+    is_tech = check_subject(["tech", "คอมพิวเตอร์", "เทคโนโลยี", "it"], top_subs)
 
     st.markdown("### 1. สรุปประพจน์ทั้งหมด (Propositions Setup)")
-    
     st.write(f"- **ประพจน์ $M_{{{mbti}}}$**: ผู้เรียนเป็นคนประเภท {mbti} = `True`")
     st.write(f"- **ประพจน์ $P$ (ชอบคณิตศาสตร์)** = `{is_math}`")
     st.write(f"- **ประพจน์ $Q$ (ชอบวิทยาศาสตร์)** = `{is_sci}`")
@@ -302,5 +296,5 @@ elif st.session_state.step == 4:
 
     st.markdown("---")
     if st.button("🔄 เริ่มทำแบบประเมินใหม่"):
-        st.session_state.step = 1
+        st.session_state.clear()
         st.rerun()
