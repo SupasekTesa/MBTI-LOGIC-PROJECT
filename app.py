@@ -114,7 +114,7 @@ if st.session_state.step == 1:
             st.rerun()
 
 # ---------------------------------------------------------
-# STEP 2: สรุปผล MBTI และแสดงสมการตรรกศาสตร์ (ปรับปรุงแล้ว)
+# STEP 2: สรุปผล MBTI และแสดงสมการตรรกศาสตร์ (ปรับปรุงกำหนดประพจน์ชัดเจน)
 # ---------------------------------------------------------
 elif st.session_state.step == 2:
     st.title("🌟 ขั้นตอนที่ 2: สรุปผลลัพธ์และแบบจำลองตรรกศาสตร์ MBTI")
@@ -150,7 +150,7 @@ elif st.session_state.step == 2:
     st.markdown("---")
 
     # ---------------------------------------------------------
-    # แสดงตรรกศาสตร์ (ระบุชื่อฟังก์ชันโดยตรง ไม่ใช้ตัวแปร A หรือ AllowedAux)
+    # แสดงตรรกศาสตร์ (กำหนดประพจน์เด่นชัด อ่านเข้าใจง่าย)
     # ---------------------------------------------------------
     if stack:
         dom = stack['Dom']
@@ -162,32 +162,33 @@ elif st.session_state.step == 2:
 
         with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)", expanded=True):
             st.markdown("### 1. การกำหนดประพจน์พื้นฐาน (Propositions Setup)")
-            st.write("* ให้ $\\text{Score}(f)$ แทน คะแนนของฟังก์ชัน $f \\in \\{\\text{Ne, Ni, Se, Si, Te, Ti, Fe, Fi}\\}$")
-            st.write(f"* ให้ประพจน์ **$M_{{{mbti}}}$** แทน *\"ผู้ใช้มีบุคลิกภาพแบบ {mbti}\"* (ค่าความจริง = **True**)")
+            st.write(f"* **ประพจน์ $A$**: {dom} เป็นฟังก์ชันที่มีคะแนนสูงที่สุดในทุกฟังก์ชัน `(True)`")
+            st.write(f"* **ประพจน์ $B$**: {aux} เป็นฟังก์ชันที่มีคะแนนสูงที่สุดในกลุ่ม {aux_set_display} `(True)`")
+            st.write(f"* **ประพจน์ $M_{{{mbti}}}$**: ผู้เรียนมีบุคลิกภาพแบบ {mbti} `(True)`")
             
             st.markdown("---")
 
-            st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการหา Dominant (ฟังก์ชันหลัก)")
-            st.latex(rf"\text{{Dom}} = \text{{{dom}}} \iff \forall f \, (\text{{Score}}(\text{{{dom}}}) \ge \text{{Score}}(f))")
-            st.caption(f"อธิบาย: สรุปว่า Dom คือ {dom} ก็ต่อเมื่อ คะแนนของ {dom} มากกว่าหรือเท่ากับคะแนนของทุกฟังก์ชัน (f)")
+            st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการตัดสิน Dominant (ฟังก์ชันหลัก)")
+            st.latex(rf"A \iff (\text{{Dom}} = \text{{{dom}}})")
+            st.caption(f"อธิบาย: ประพจน์ A เป็นจริง ก็ต่อเมื่อ กำหนดให้ Dominant Function คือ {dom}")
 
             st.markdown("---")
 
             st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง) และการตัดสินประเภท")
-            st.latex(rf"(\text{{Dom}} = \text{{{dom}}}) \implies (\text{{Aux}} \in \text{{{aux_set_display}}})")
-            st.caption(f"อธิบาย: เมื่อ Dom คือ {dom} จะส่งผลให้ฟังก์ชัน Aux ต้องเลือกมาจากกลุ่ม {aux_set_display} เท่านั้น")
+            st.latex(rf"B \iff (\text{{Aux}} = \text{{{aux}}})")
+            st.caption(f"อธิบาย: ประพจน์ B เป็นจริง ก็ต่อเมื่อ กำหนดให้ Auxiliary Function คือ {aux}")
 
             st.markdown(f"**เงื่อนไขประพจน์สรุปประเภท {mbti}:**")
-            st.latex(rf"(\text{{Dom}} = \text{{{dom}}} \land \text{{Aux}} = \text{{{aux}}}) \implies \text{{Type}} = \text{{{mbti}}}")
-            st.write(f"* **สรุปตรรกศาสตร์:** (Dom คือ `{dom}`) $\\land$ (Aux คือ `{aux}`) $\\implies$ สรุปว่าเป็น **{mbti}**")
+            st.latex(rf"(A \land B) \implies M_{{{mbti}}}")
+            st.write(f"* **สรุปตรรกศาสตร์:** (ประพจน์ $A$ เป็นจริง) $\\land$ (ประพจน์ $B$ เป็นจริง) $\\implies$ สรุปว่าเป็นประพจน์ **$M_{{{mbti}}}$**")
 
             st.markdown("---")
 
             st.markdown("### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ $\iff$)")
             st.write("ฟังก์ชันคู่ตรงข้ามตามโครงสร้าง Cognitive Stack มีความสมมูลกันแบบ 2 ทาง:")
             
-            st.latex(rf"\text{{Dom}} = \text{{{dom}}} \iff \text{{Inferior}} = \text{{{inf}}}")
-            st.latex(rf"\text{{Aux}} = \text{{{aux}}} \iff \text{{Tertiary}} = \text{{{tert}}}")
+            st.latex(rf"(\text{{Dom}} = \text{{{dom}}}) \iff (\text{{Inferior}} = \text{{{inf}}})")
+            st.latex(rf"(\text{{Aux}} = \text{{{aux}}}) \iff (\text{{Tertiary}} = \text{{{tert}}})")
             st.caption(f"อธิบาย: เมื่อ Dom เป็น {dom} แล้ว Inferior จะเป็น {inf} เสมอ และเมื่อ Aux เป็น {aux} แล้ว Tertiary จะเป็น {tert} เสมอ")
 
     st.markdown("---")
