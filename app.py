@@ -157,7 +157,8 @@ elif st.session_state.step == 2:
         aux = stack['Aux']
         tert = stack['Tert']
         inf = stack['Inf']
-        aux_str = ", ".join(possible_aux) # แปลงลิสต์เป็นข้อความ เช่น "Te, Fe"
+        aux_str = ", ".join(possible_aux)
+        aux_set_display = "{" + aux_str + "}"
 
         with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)", expanded=True):
             st.markdown("### 1. การกำหนดประพจน์พื้นฐาน (Propositions Setup)")
@@ -173,8 +174,8 @@ elif st.session_state.step == 2:
             st.markdown("---")
 
             st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง) และการตัดสินประเภท")
-            st.latex(rf"(\text{{Dom}} = \text{{{dom}}}) \implies (\text{{Aux}} \in \{{\text{{{aux_str}}}\}})")
-            st.caption(f"อธิบาย: เมื่อ Dom คือ {dom} จะส่งผลให้ฟังก์ชัน Aux ต้องเลือกมาจากกลุ่ม \{{\\text{{{aux_str}}}\}\} เท่านั้น")
+            st.latex(rf"(\text{{Dom}} = \text{{{dom}}}) \implies (\text{{Aux}} \in \text{{{aux_set_display}}})")
+            st.caption(f"อธิบาย: เมื่อ Dom คือ {dom} จะส่งผลให้ฟังก์ชัน Aux ต้องเลือกมาจากกลุ่ม {aux_set_display} เท่านั้น")
 
             st.markdown(f"**เงื่อนไขประพจน์สรุปประเภท {mbti}:**")
             st.latex(rf"(\text{{Dom}} = \text{{{dom}}} \land \text{{Aux}} = \text{{{aux}}}) \implies \text{{Type}} = \text{{{mbti}}}")
