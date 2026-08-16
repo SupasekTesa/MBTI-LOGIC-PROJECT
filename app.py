@@ -147,20 +147,36 @@ elif st.session_state.step == 2:
             st.write(f"🥉 **Tertiary:** `{stack['Tert']}` ({func_pct.get(stack['Tert'], 0)}%)")
             st.write(f"⚓ **Inferior:** `{stack['Inf']}` ({func_pct.get(stack['Inf'], 0)}%)")
             
+    # ---------------------------------------------------------
+    # แสดงตรรกศาสตร์สไตล์ ม.4 (Propositions & Truth Logic)
+    # ---------------------------------------------------------
     st.markdown("---")
+    with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)"):
+        st.markdown("### 1. การกำหนดประพจน์ (Propositions)")
+        st.write("* ให้ **Score(f)** แทน คะแนนของฟังก์ชัน f")
+        st.write("* ให้ประพจน์ **P**: *ฟังก์ชัน A มีคะแนนสูงที่สุด*")
+        
+        st.markdown("---")
 
-    if stack:
-        dom = stack['Dom']
-        aux = stack['Aux']
-        aux_str = ", ".join(possible_aux)
+        st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการหา Dominant (ฟังก์ชันหลัก)")
+        st.latex(r"\text{Dom} = A \iff \forall f \, (\text{Score}(A) \ge \text{Score}(f))")
+        st.caption("แปลว่า: ฟังก์ชัน A จะเป็น Dominant ก็ต่อเมื่อ คะแนนของ A มากกว่าหรือเท่ากับคะแนนของทุกๆ ฟังก์ชัน (f)")
 
-        with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ", expanded=True):
-            st.markdown("### 1. การกำหนดประพจน์พื้นฐาน")
-            st.write(f"* **ประพจน์ $A$**: {dom} เป็นฟังก์ชันที่มีคะแนนสูงที่สุด `(True)`")
-            st.write(f"* **ประพจน์ $B$**: {aux} เป็นฟังก์ชันรองที่มีคะแนนสูงสุดในกลุ่ม {{{aux_str}}} `(True)`")
-            st.write(f"* **ประพจน์ $M_{{{mbti}}}$**: สรุปว่าเป็นบุคลิกภาพ {mbti} `(True)`")
-            st.latex(rf"(A \land B) \implies M_{{{mbti}}}")
+        st.markdown("---")
 
+        st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง)")
+        st.markdown("**กรณีที่ Dom = Ne:**")
+        st.latex(r"(\text{Dom} = Ne) \implies (\text{Aux} \in \{Ti, Fi\})")
+        st.write("* **เงื่อนไขที่ 1:** ถ้า `Score(Ti) > Score(Fi)` แล้ว `(Aux = Ti ∧ Type = ENTP)`")
+        st.write("* **เงื่อนไขที่ 2:** ถ้า `Score(Fi) > Score(Ti)` แล้ว `(Aux = Fi ∧ Type = ENFP)`")
+
+        st.markdown("---")
+
+        st.markdown("### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ ⇔)")
+        st.latex(r"\text{Dom} = Ne \iff \text{Inferior} = Si")
+        st.latex(r"\text{Aux} = Ti \iff \text{Tertiary} = Fe")
+        st.latex(r"\text{Aux} = Fi \iff \text{Tertiary} = Te")
+        
     st.markdown("---")
     if st.button("➡️ ไปต่อ: ประเมินความชอบ 5 หมวดหมู่ (Step 3)"):
         st.session_state.step = 3
