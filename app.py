@@ -63,6 +63,9 @@ if st.session_state.step == 1:
             for item in raw_answers.values():
                 func_scores[item["func"]] += item["score"]
 
+            func_percentages = {func: round((score / 50) * 100, 1) for func, score in func_scores.items()}
+            sorted_funcs = sorted(func_scores.items(), key=lambda x: x[1], reverse=True)
+
             dom_func = max(func_scores, key=func_scores.get)
             
             possible_aux = []
@@ -72,6 +75,25 @@ if st.session_state.step == 1:
             elif dom_func in ["Ti", "Fi"]: possible_aux = ["Ne", "Se"]
 
             aux_func = max(possible_aux, key=lambda f: func_scores[f])
+
+            opposite_map = {
+                "Ne": "Si", "Si": "Ne",
+                "Ni": "Se", "Se": "Ni",
+                "Te": "Fi", "Fi": "Te",
+                "Ti": "Fe", "Fe": "Ti"
+            }
+            tertiary_func = opposite_map[aux_func]
+            inferior_func = opposite_map[dom_func]
+
+            st.session_state.func_scores = func_scores
+            st.session_state.func_percentages = func_percentages
+            st.session_state.sorted_funcs = sorted_funcs
+            st.session_state.mbti_stack = {
+                "Dom": dom_func,
+                "Aux": aux_func,
+                "Tert": tertiary_func,
+                "Inf": inferior_func
+            }
 
             type_mapping = {
                 ("Ne", "Ti"): "ENTP", ("Ne", "Fi"): "ENFP",
@@ -89,21 +111,62 @@ if st.session_state.step == 1:
             st.rerun()
 
 # ---------------------------------------------------------
-# STEP 2: สรุปผล MBTI และกำหนดประพจน์ MBTI
+# STEP 2: สรุปผล MBTI และแสดงสมการตรรกศาสตร์
 # ---------------------------------------------------------
 elif st.session_state.step == 2:
-    st.title("🌟 ขั้นตอนที่ 2: สรุปประพจน์บุคลิกภาพ (MBTI Proposition)")
+    st.title("🌟 ขั้นตอนที่ 2: สรุปผลลัพธ์และแบบจำลองตรรกศาสตร์ MBTI")
     
     mbti = st.session_state.mbti_result
     info = MBTI_DESCRIPTIONS.get(mbti, MBTI_DESCRIPTIONS["INTJ"])
+    sorted_funcs = st.session_state.get("sorted_funcs", [])
+    func_pct = st.session_state.get("func_percentages", {})
+    stack = st.session_state.get("mbti_stack", {})
     
     st.success(f"### ผลการวิเคราะห์ MBTI: **{mbti}** ({info['title']})")
+    st.info(f"**ลักษณะตัวตน:** {info['desc']}")
+
+    st.subheader("📊 ลำดับคะแนนและ Cognitive Stack")
+    col_chart, col_rank = st.columns([3, 2])
     
-    st.info(f"""
-    **📌 การกำหนดประพจน์หลัก:**
-    ให้ประพจน์ **$M_{{{mbti}}}$** แทนความหมาย: *"ผู้เรียนมีบุคลิกภาพแบบ {mbti}"* = **True (จริง)**
-    """)
+    with col_chart:
+        st.markdown("**ระดับความเข้มข้นของฟังก์ชัน (%):**")
+        for func_code, score in sorted_funcs:
+            pct = func_pct.get(func_code, 0)
+            st.write(f"**{func_code}**: {score}/50 คะแนน ({pct}%)")
+            st.progress(pct / 100)
+            
+    with col_rank:
+        st.markdown("**ฟังก์ชันการทำงานหลัก:**")
+        if stack:
+            st.write(f"🥇 **Dominant:** `{stack['Dom']}` ({func_pct.get(stack['Dom'], 0)}%)")
+            st.write(f"🥈 **Auxiliary:** `{stack['Aux']}` ({func_pct.get(stack['Aux'], 0)}%)")
+            st.write(f"🥉 **Tertiary:** `{stack['Tert']}` ({func_pct.get(stack['Tert'], 0)}%)")
+            st.write(f"⚓ **Inferior:** `{stack['Inf']}` ({func_pct.get(stack['Inf'], 0)}%)")
+            
+    st.markdown("---")
+
+    # ---------------------------------------------------------
+    # สมการตรรกศาสตร์สรุป MBTI ( Mathematical Logic Expansion )
+    # ---------------------------------------------------------
+    st.markdown("### 📚 สมการและเงื่อนไขตรรกศาสตร์ (Mathematical Logic Rules)")
     
+    st.markdown("#### 1. การกำหนดประพจน์พื้นฐาน (Proposition Definition)")
+    st.write(f"- ให้ **Score(f)** แทน คะแนนของฟังก์ชัน $f \in \{{\text{{Ne, Ni, Se, Si, Te, Ti, Fe, Fi}}\}}$")
+    st.write(f"- กำหนดประพจน์หลัก: **$M_{{{mbti}}}$** แทนความหมาย *\"ผู้ใช้มีบุคลิกภาพแบบ {mbti}\"*")
+    st.info(f"👉 **สถานะความจริง (Truth Value):** $M_{{{mbti}}} = \\text{{True}}$")
+
+    st.markdown("#### 2. สมการตรรกศาสตร์ในการหา Dominant & Auxiliary Function")
+    st.latex(r"\text{Dom} = A \iff \forall f \, (\text{Score}(A) \ge \text{Score}(f))")
+    st.caption("อธิบาย: ฟังก์ชัน A จะเป็น Dominant ก็ต่อเมื่อ คะแนนของ A มากกว่าหรือเท่ากับคะแนนของทุกฟังก์ชัน")
+
+    st.latex(r"\text{Aux} = B \iff (B \in \text{AllowedAux}(\text{Dom})) \land \forall k \in \text{AllowedAux}(\text{Dom}) \, (\text{Score}(B) \ge \text{Score}(k))")
+    st.caption("อธิบาย: ฟังก์ชัน B จะเป็น Auxiliary ก็ต่อเมื่อ B อยู่ในกลุ่มที่เข้ากันได้กับ Dom และมีคะแนนสูงสุดในกลุ่มนั้น")
+
+    st.markdown("#### 3. กฎความสมมูลตรงข้าม (Equivalence Rules ⇔)")
+    if stack:
+        st.latex(rf"\text{{Dom}} = \text{{{stack['Dom']}}} \iff \text{{Inferior}} = \text{{{stack['Inf']}}}")
+        st.latex(rf"\text{{Aux}} = \text{{{stack['Aux']}}} \iff \text{{Tertiary}} = \text{{{stack['Tert']}}}")
+
     st.markdown("---")
     if st.button("➡️ ไปต่อ: เลือกความชอบวิชาเพื่อสร้างประพจน์ความชอบ (Step 3)"):
         st.session_state.step = 3
@@ -131,10 +194,9 @@ elif st.session_state.step == 3:
         submitted_step3 = st.form_submit_button("🚀 สรุปประพจน์ความชอบและตรวจสอบเงื่อนไข (Step 4)")
         
         if submitted_step3:
-            # หาวิชาที่ชอบมากที่สุดเป็นวิชาหลัก
             sorted_subjects = sorted(sub_scores.items(), key=lambda x: x[1], reverse=True)
             st.session_state.sub_scores = sub_scores
-            st.session_state.top_subjects = [s[0] for s in sorted_subjects[:2]] # เลือก 2 อันดับแรก
+            st.session_state.top_subjects = [s[0] for s in sorted_subjects[:2]]
             st.session_state.step = 4
             st.rerun()
 
@@ -147,7 +209,6 @@ elif st.session_state.step == 4:
     mbti = st.session_state.mbti_result
     top_subs = st.session_state.get("top_subjects", [])
 
-    # กำหนดสถานะความจริงของประพจน์วิชา
     is_math = "Math & Logic" in top_subs or "คณิตศาสตร์/ฟิสิกส์" in top_subs
     is_sci = "Natural Science" in top_subs or "วิทยาศาสตร์/เคมี/ชีวา" in top_subs
     is_art = "Art & Design" in top_subs or "ศิลปะ/ออกแบบ" in top_subs
@@ -164,9 +225,6 @@ elif st.session_state.step == 4:
     st.markdown("---")
     st.markdown("### 2. นิยามเงื่อนไขทางตรรกศาสตร์ของแต่ละคณะ (Logical Rules for Faculties)")
     
-    # ---------------------------------------------------------
-    # ตารางเงื่อนไขการเชื่อมประพจน์ด้วย "และ" (AND Logic)
-    # ---------------------------------------------------------
     faculties_rules = [
         {
             "faculty": "คณะวิทยาศาสตร์ / วิทยาศาสตร์ข้อมูล",
@@ -208,9 +266,6 @@ elif st.session_state.step == 4:
             st.error("ผลลัพธ์ทางตรรกศาสตร์: **FALSE (เท็จ - ไม่ตรงตามเงื่อนไข)**")
         st.markdown("<hr style='margin: 0.5rem 0;'>", unsafe_allow_html=True)
 
-    # ---------------------------------------------------------
-    # 3. สรุปคณะที่สอบผ่านเงื่อนไขตรรกศาสตร์
-    # ---------------------------------------------------------
     st.markdown("---")
     st.subheader("🎯 สรุปผลคณะและอาชีพที่ตรงตามเงื่อนไขตรรกศาสตร์ของคุณ")
     
