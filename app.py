@@ -37,6 +37,7 @@ SCALE_OPTIONS = {
     "4 - ค่อนข้างตรง": 4,
     "5 - ตรงมากที่สุด": 5
 }
+
 # ---------------------------------------------------------
 # HELPER FUNCTIONS: ฟังก์ชันคำนวณอาชีพเฉพาะตัว (MBTI + Subject)
 # ---------------------------------------------------------
@@ -48,7 +49,12 @@ def get_custom_career(mbti_type, top_subject):
         "คอมพิวเตอร์/เทคโนโลยี": {"base": "นักพัฒนาซอฟต์แวร์", "icon": "💻"},
         "ภาษา/วรรณกรรม": {"base": "นักเขียน / นักสื่อสาร", "icon": "📚"},
         "สังคม/ประวัติศาสตร์": {"base": "นักวางแผนนโยบาย / นักสังคมศาสตร์", "icon": "🏛️"},
-        "ดนตรี/การแสดง": {"base": "ผู้สร้างสรรค์ผลงานดนตรี/การแสดง", "icon": "🎭"}
+        "ดนตรี/การแสดง": {"base": "ผู้สร้างสรรค์ผลงานดนตรี/การแสดง", "icon": "🎭"},
+        # เพิ่มคีย์ภาษาอังกฤษสำรองไว้กรณีมาจาก questions.py
+        "Natural Science": {"base": "นักวิจัย / บุคลากรวิทยาศาสตร์สุขภาพ", "icon": "🔬"},
+        "Math & Logic": {"base": "นักวิเคราะห์ข้อมูล / วิศวกรตรรกศาสตร์", "icon": "📐"},
+        "Technology": {"base": "นักพัฒนาซอฟต์แวร์และระบบ", "icon": "💻"},
+        "Art & Design": {"base": "นักออกแบบสร้างสรรค์ / UX UI Designer", "icon": "🎨"}
     }
     
     mbti_styles = {
@@ -78,7 +84,7 @@ def get_custom_career(mbti_type, top_subject):
         "icon": career_info['icon'],
         "description": f"ทำงานในสายงาน **{career_info['base']}** โดยมีจุดเด่นคือ **{style_desc}**"
     }
-    
+
 # ---------------------------------------------------------
 # STEP 1: ประเมิน Cognitive Functions (80 ข้อ + คำนวณละเอียด)
 # ---------------------------------------------------------
@@ -87,7 +93,6 @@ if st.session_state.step == 1:
     st.write("โปรดเลือกสเกลที่ตรงกับความเป็นจริงของคุณมากที่สุด (1 = ไม่ตรงเลย, 5 = ตรงมากที่สุด)")
     
     with st.form("mbti_form"):
-        # เก็บคำตอบแยกตาม ID ข้อสอบเพื่อป้องกันข้อมูลตีกัน
         raw_answers = {}
         for idx, q in enumerate(COGNITIVE_QUESTIONS, 1):
             st.markdown(f"**ข้อที่ {idx}:** {q['text']}")
@@ -104,44 +109,27 @@ if st.session_state.step == 1:
         submitted = st.form_submit_button("🚀 ประมวลผลและคำนวณตรรกศาสตร์ MBTI (Step 1)")
         
         if submitted:
-            # 1. รวมคะแนนแยกตามฟังก์ชัน (เต็ม 50 คะแนนต่อฟังก์ชัน)
             func_scores = {"Ne": 0, "Ni": 0, "Se": 0, "Si": 0, "Te": 0, "Ti": 0, "Fe": 0, "Fi": 0}
             for item in raw_answers.values():
                 func_scores[item["func"]] += item["score"]
 
-            # 2. คำนวณเปอร์เซ็นต์คะแนนดิบสำหรับนำไปแสดงผลกราฟ
             func_percentages = {func: round((score / 50) * 100, 1) for func, score in func_scores.items()}
             sorted_funcs = sorted(func_scores.items(), key=lambda x: x[1], reverse=True)
 
-            # -------------------------------------------------------------------
-            # [วางโค้ดตรรกศาสตร์ MBTI ตรงนี้] (บรรทัดต่อจากคำนวณคะแนนดิบ)
-            # -------------------------------------------------------------------
-            # 3.1 หา Dominant (ฟังก์ชันที่คะแนนสูงสุด)
             dom_func = max(func_scores, key=func_scores.get)
 
-            # 3.2 กำหนดตัวเลือก Auxiliary ที่ถูกต้องตามกฎทฤษฎี MBTI
             possible_aux = []
-            if dom_func == "Ne":
+            if dom_func in ["Ne", "Se"]:
                 possible_aux = ["Ti", "Fi"]
-            elif dom_func == "Ni":
+            elif dom_func in ["Ni", "Si"]:
                 possible_aux = ["Te", "Fe"]
-            elif dom_func == "Se":
-                possible_aux = ["Ti", "Fi"]
-            elif dom_func == "Si":
-                possible_aux = ["Te", "Fe"]
-            elif dom_func == "Te":
+            elif dom_func in ["Te", "Fe"]:
                 possible_aux = ["Ni", "Si"]
-            elif dom_func == "Ti":
-                possible_aux = ["Ne", "Se"]
-            elif dom_func == "Fe":
-                possible_aux = ["Ni", "Si"]
-            elif dom_func == "Fi":
+            elif dom_func in ["Ti", "Fi"]:
                 possible_aux = ["Ne", "Se"]
 
-            # 3.3 เลือก Auxiliary โดยเทียบคะแนนระหว่างตัวเลือกที่ถูกต้องตามทฤษฎี
             aux_func = max(possible_aux, key=lambda f: func_scores[f])
 
-            # 3.4 หา Tertiary และ Inferior จากคู่ตรงข้ามตามทฤษฎี
             opposite_map = {
                 "Ne": "Si", "Si": "Ne",
                 "Ni": "Se", "Se": "Ni",
@@ -151,12 +139,10 @@ if st.session_state.step == 1:
             tertiary_func = opposite_map[aux_func]
             inferior_func = opposite_map[dom_func]
 
-            # 4. บันทึกข้อมูลเข้า session_state
             st.session_state.func_scores = func_scores
             st.session_state.func_percentages = func_percentages
             st.session_state.sorted_funcs = sorted_funcs
             
-            # บันทึก Cognitive Stack ที่ถูกต้องตามกฎ
             st.session_state.mbti_stack = {
                 "Dom": dom_func,
                 "Aux": aux_func,
@@ -164,8 +150,6 @@ if st.session_state.step == 1:
                 "Inf": inferior_func
             }
 
-            # 5. สรุปชื่อ MBTI Code จาก Dom และ Aux
-            # (เช่น Ne + Ti = ENTP, Ne + Fi = ENFP)
             type_mapping = {
                 ("Ne", "Ti"): "ENTP", ("Ne", "Fi"): "ENFP",
                 ("Ni", "Te"): "INTJ", ("Ni", "Fe"): "INFJ",
@@ -180,7 +164,6 @@ if st.session_state.step == 1:
             mbti_code = type_mapping.get((dom_func, aux_func), "ENTP")
             st.session_state.mbti_result = mbti_code
             
-            # 6. เปลี่ยนหน้าไปยัง Step 2
             st.session_state.step = 2
             st.rerun()
 
@@ -194,12 +177,10 @@ elif st.session_state.step == 2:
     info = MBTI_DESCRIPTIONS.get(mbti, MBTI_DESCRIPTIONS["ENTP"])
     sorted_funcs = st.session_state.get("sorted_funcs", [])
     func_pct = st.session_state.get("func_percentages", {})
-    func_raw = st.session_state.get("func_scores", {})
     
     st.success(f"### ผลการวิเคราะห์: บุคลิกภาพของคุณคือ **{mbti}** ({info['title']})")
     st.info(f"**ลักษณะตัวตน:** {info['desc']}")
     
-    # แสดงตารางวิเคราะห์ Cognitive Function Stack แบบละเอียด
     st.subheader("📊 ตรรกศาสตร์การคำนวณ Cognitive Functions (คะแนนเต็ม 50 คะแนน)")
     
     col_chart, col_rank = st.columns([3, 2])
@@ -219,25 +200,18 @@ elif st.session_state.step == 2:
             st.write(f"🥈 **Auxiliary (ฟังก์ชันรอง):** `{stack['Aux']}` ({func_pct[stack['Aux']]}%)")
             st.write(f"🥉 **Tertiary (ฟังก์ชันลำดับสาม):** `{stack['Tert']}` ({func_pct[stack['Tert']]}%)")
             st.write(f"⚓ **Inferior (จุดที่ต้องพัฒนา):** `{stack['Inf']}` ({func_pct[stack['Inf']]}%)")
+            
     st.markdown("---")
 
     # ---------------------------------------------------------
     # แสดงผลอาชีพเฉพาะตัว (MBTI + วิชาที่ชอบ)
     # ---------------------------------------------------------
-    # ดึงวิชาที่ได้คะแนนสูงสุด (เช็คว่ามีข้อมูลใน session_state หรือไม่)
-    subject_scores = st.session_state.get("subject_scores", {})
-    if subject_scores:
-        top_subject = max(subject_scores, key=subject_scores.get)
-    else:
-        top_subject = "ศิลปะ/ออกแบบ"  # ค่า Default กรณีทดสอบ
-
+    prefs = st.session_state.get("user_preferences", {})
+    top_subject = prefs.get("top_subject", "ศิลปะ/ออกแบบ") # ดึงจาก user_preferences
     mbti_result = st.session_state.mbti_result
 
-    # เรียกใช้ฟังก์ชันคำนวณอาชีพ
     custom_career = get_custom_career(mbti_result, top_subject)
 
-    # แสดงผลในหน้าเว็บ
-    st.markdown("---")
     st.markdown("### 🎯 แนวทางอาชีพเฉพาะตัวของคุณ (Subject Preference × MBTI)")
     st.info(f"""
     ### {custom_career['icon']} {custom_career['title']}
@@ -245,15 +219,6 @@ elif st.session_state.step == 2:
     {custom_career['description']}
     """)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("⬅ ทำแบบประเมิน MBTI ใหม่"):
-            st.session_state.step = 1
-            st.rerun()
-    with col2:
-        if st.button("➡️ ไปต่อ: ประเมินความชอบ & ทุนการเงิน (Step 3)"):
-            st.session_state.step = 3
-            st.rerun()
     # ---------------------------------------------------------
     # แสดงตรรกศาสตร์สไตล์ ม.4 (Propositions & Truth Logic)
     # ---------------------------------------------------------
@@ -283,6 +248,21 @@ elif st.session_state.step == 2:
         st.latex(r"\text{Dom} = Ne \iff \text{Inferior} = Si")
         st.latex(r"\text{Aux} = Ti \iff \text{Tertiary} = Fe")
         st.latex(r"\text{Aux} = Fi \iff \text{Tertiary} = Te")
+
+    # ---------------------------------------------------------
+    # ปุ่มกดเปลี่ยนหน้า (วางไว้ล่างสุดของ Step 2)
+    # ---------------------------------------------------------
+    st.markdown("---")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("⬅ ทำแบบประเมิน MBTI ใหม่"):
+            st.session_state.step = 1
+            st.rerun()
+    with col2:
+        if st.button("➡️ ไปต่อ: ประเมินความชอบ & ทุนการเงิน (Step 3)"):
+            st.session_state.step = 3
+            st.rerun()
+
 # ---------------------------------------------------------
 # STEP 3: ประเมินความชอบ วิชา งานอดิเรก เป้าหมาย ทุนการเงิน
 # ---------------------------------------------------------
@@ -291,7 +271,6 @@ elif st.session_state.step == 3:
     st.write("ส่วนนี้จะนำความชอบจริงของคุณไปผสมผสานกับ MBTI เพื่อให้อาชีพไม่แคบและตรงใจมากที่สุด")
     
     with st.form("preference_form"):
-        # 1. หมวดวิชา
         st.subheader("📚 1. ความชอบหมวดวิชาการ")
         sub_scores = {}
         for q in SUBJECT_QUESTIONS:
@@ -299,7 +278,6 @@ elif st.session_state.step == 3:
             sub_scores[q["category"]] = sub_scores.get(q["category"], 0) + SCALE_OPTIONS[ans]
             
         st.markdown("---")
-        # 2. งานอดิเรก
         st.subheader("🎨 2. ความสนใจและงานอดิเรก")
         hob_scores = {}
         for q in HOBBY_QUESTIONS:
@@ -307,7 +285,6 @@ elif st.session_state.step == 3:
             hob_scores[q["category"]] = hob_scores.get(q["category"], 0) + SCALE_OPTIONS[ans]
             
         st.markdown("---")
-        # 3. เป้าหมายการทำงาน
         st.subheader("🎯 3. สไตล์และเป้าหมายการทำงาน")
         goal_scores = {}
         for q in GOAL_QUESTIONS:
@@ -315,7 +292,6 @@ elif st.session_state.step == 3:
             goal_scores[q["category"]] = goal_scores.get(q["category"], 0) + SCALE_OPTIONS[ans]
 
         st.markdown("---")
-        # 4. เงื่อนไขทางการเงิน 5 ข้อ
         st.subheader("💰 4. เงื่อนไขและงบประมาณการศึกษา")
         fin_answers = {}
         for q in FINANCIAL_QUESTIONS:
@@ -325,10 +301,11 @@ elif st.session_state.step == 3:
         submitted_step3 = st.form_submit_button("🚀 ประมวลผลสรุปเส้นทางอนาคต (Step 4)")
         
         if submitted_step3:
-            # สรุปอันดับวิชาและงานอดิเรกที่ได้คะแนนสูงสุด
             top_subject = max(sub_scores, key=sub_scores.get)
             top_hobby = max(hob_scores, key=hob_scores.get)
             
+            # บันทึกคะแนนวิชาเข้าไปยัง session_state เพื่อให้ Step 2 ดึงไปใช้ได้ด้วย
+            st.session_state.subject_scores = sub_scores
             st.session_state.user_preferences = {
                 "top_subject": top_subject,
                 "top_hobby": top_hobby,
@@ -353,7 +330,6 @@ elif st.session_state.step == 4:
     budget_ans = fin.get("fin_budget", "")
     scholar_ans = fin.get("fin_scholarship_need", "")
 
-    # แสดงโปรไฟล์ผู้ใช้
     st.markdown(f"""
     <div style="background-color: #F0F9FF; border: 1px solid #BAE6FD; padding: 1.2rem; border-radius: 10px; margin-bottom: 1.5rem;">
         <b>👤 โปรไฟล์สรุปของคุณ:</b><br>
@@ -364,23 +340,20 @@ elif st.session_state.step == 4:
     </div>
     """, unsafe_allow_html=True)
 
-    # -----------------------------------------------------
-    # วิเคราะห์อาชีพ dynamic ผสม MBTI + วิชา + งานอดิเรก
-    # -----------------------------------------------------
     st.subheader("💼 เส้นทางอาชีพที่แนะนำสำหรับคุณ")
     
     career_list = []
-    if top_subject == "Natural Science" or top_hobby == "Hands-on":
+    if top_subject in ["Natural Science", "วิทยาศาสตร์/เคมี/ชีวา"] or top_hobby == "Hands-on":
         career_list = [
             {"title": f"พยาบาลวิชาชีพ / บุคลากรทางการแพทย์ (สไตล์ {mbti})", "desc": "เหมาะกับผู้ที่สนใจสายสุขภาพ นำทักษะการดูแลและตรรกะมาประยุกต์ใช้กับชีวิตมนุษย์จริง"},
             {"title": "นักวิชาการสาธารณสุข / นักวิจัยวิทยาศาสตร์", "desc": "เน้นการวิเคราะห์ข้อมูลและสร้างนวัตกรรมเพื่อพัฒนาสุขภาวะในสังคม"}
         ]
-    elif top_subject == "Technology" or top_subject == "Math & Logic" or top_hobby == "Tech & Gaming":
+    elif top_subject in ["Technology", "Math & Logic", "คอมพิวเตอร์/เทคโนโลยี", "คณิตศาสตร์/ฟิสิกส์"] or top_hobby == "Tech & Gaming":
         career_list = [
             {"title": f"Software Engineer / Data Scientist (สไตล์ {mbti})", "desc": "นำตรรกะและการวิเคราะห์เชิงระบบมาสร้างสรรค์เทคโนโลยีและแก้ปัญหาซับซ้อน"},
             {"title": "นักออกแบบระบบไอที / Cybersecurity Specialist", "desc": "ใช้วิธีคิดเชิงโครงสร้างเพื่อวางระบบความปลอดภัยและเทคโนโลยีแห่งอนาคต"}
         ]
-    elif top_subject == "Art & Design" or top_hobby == "Creative":
+    elif top_subject in ["Art & Design", "ศิลปะ/ออกแบบ"] or top_hobby == "Creative":
         career_list = [
             {"title": f"UX/UI Designer / Creative Director (สไตล์ {mbti})", "desc": "ผสมผสานศิลปะ ความเข้าใจมนุษย์ และเทคโนโลยีเข้าด้วยกันเพื่อสร้างประสบการณ์ผู้ใช้"},
             {"title": "นักจัดทำคอนเทนต์ / สื่อมวลชนดิจิทัล", "desc": "สื่อสารเรื่องราวและสร้างแรงบันดาลใจผ่านสื่อหลากหลายรูปแบบ"}
@@ -401,9 +374,6 @@ elif st.session_state.step == 4:
             </div>
             """, unsafe_allow_html=True)
 
-    # -----------------------------------------------------
-    # วิเคราะห์สถาบันตามเงื่อนไขงบประมาณและทุน
-    # -----------------------------------------------------
     st.subheader("🏛️ สถาบันการศึกษาและทุนการศึกษาที่แนะนำ")
     
     if "จำกัดสูง" in budget_ans or "สนใจมาก" in scholar_ans:
