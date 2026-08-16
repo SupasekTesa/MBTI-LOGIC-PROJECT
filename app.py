@@ -1,116 +1,227 @@
 import streamlit as st
+from questions import (
+    COGNITIVE_QUESTIONS, 
+    SUBJECT_QUESTIONS, 
+    HOBBY_QUESTIONS, 
+    GOAL_QUESTIONS, 
+    FINANCIAL_QUESTIONS,
+    MBTI_DESCRIPTIONS
+)
 
-st.set_page_config(page_title="Career Logic Matcher", layout="wide")
+# ---------------------------------------------------------
+# 1. Page Configuration
+# ---------------------------------------------------------
+st.set_page_config(
+    page_title="ระบบวิเคราะห์อาชีพด้วยตรรกศาสตร์ MBTI & Subject Logic",
+    page_icon="🎓",
+    layout="wide"
+)
 
-st.title("🏛️ ระบบแนะนำคณะและอาชีพด้วยตรรกศาสตร์")
-st.caption("ประมวลผลด้วยตัวเชื่อมทางตรรกศาสตร์ (MBTI ∧ ความชอบ)")
+# ---------------------------------------------------------
+# 2. Session State Management
+# ---------------------------------------------------------
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+if 'mbti_result' not in st.session_state:
+    st.session_state.mbti_result = "INTJ"
+if 'top_subject' not in st.session_state:
+    st.session_state.top_subject = None
 
-# ==========================================
-# STEP 1: รับค่า MBTI (กำหนดประพจน์บุคลิกภาพ)
-# ==========================================
-st.header("1. เลือกบุคลิกภาพ MBTI")
+SCALE_OPTIONS = {
+    "1 - ไม่ตรงเลย": 1,
+    "2 - ไม่ค่อยตรง": 2,
+    "3 - ปานกลาง / ไม่แน่ใจ": 3,
+    "4 - ค่อนข้างตรง": 4,
+    "5 - ตรงมากที่สุด": 5
+}
 
-all_mbti = [
-    "INTJ", "INTP", "ENTJ", "ENTP", 
-    "INFJ", "INFP", "ENFJ", "ENFP",
-    "ISTJ", "ISFJ", "ESTJ", "ESFJ", 
-    "ISTP", "ISFP", "ESTP", "ESFP"
-]
-
-user_mbti = st.selectbox("ผลลัพธ์ MBTI ของคุณ:", all_mbti)
-
-# สร้าง Dictionary เก็บค่าความจริงของประพจน์ MBTI (ตัวที่เลือกจะเป็น True ตัวอื่นเป็น False)
-mbti_prop = {m: (m == user_mbti) for m in all_mbti}
-
-st.divider()
-
-# ==========================================
-# STEP 2: ประพจน์ความชอบ 5 หมวดวิชา/สายงาน
-# ==========================================
-st.header("2. เลือกความชอบ (5 หมวดหลัก)")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    p_sci = st.checkbox("🔬 p1: วิทยาศาสตร์และเทคโนโลยี (Science & Tech)")
-    p_math = st.checkbox("📐 p2: คณิตศาสตร์และตรรกะ (Math & Logic)")
-    p_art = st.checkbox("🎨 p3: ศิลปะและการออกแบบ (Art & Design)")
-
-with col2:
-    p_lang = st.checkbox("🗣️ p4: ภาษาและมนุษยศาสตร์ (Language & Humanities)")
-    p_social = st.checkbox("💼 p5: สังคมศาสตร์และการบริหาร (Social & Management)")
-
-# กำหนดประพจน์เดี่ยวของความชอบ (Atomic Propositions)
-P_sci = p_sci
-P_math = p_math
-P_art = p_art
-P_lang = p_lang
-P_social = p_social
-
-st.divider()
-
-# ==========================================
-# STEP 3 & 4: ประมวลผลและแสดงตรรกศาสตร์
-# ==========================================
-if st.button("🚀 ประมวลผลเงื่อนไขทางตรรกศาสตร์", type="primary"):
-    st.header("3. ผลลัพธ์และการวิเคราะห์เงื่อนไข")
+# ---------------------------------------------------------
+# STEP 1: ประเมิน MBTI (Cognitive Functions)
+# ---------------------------------------------------------
+if st.session_state.step == 1:
+    st.title("🧩 ขั้นตอนที่ 1: ประเมินบุคลิกภาพ (MBTI)")
+    st.write("เลือกสเกลที่ตรงกับตัวคุณมากที่สุดเพื่อสรุปหาประพจน์ทางบุคลิกภาพ")
     
-    # กำหนดเงื่อนไขของแต่ละคณะและอาชีพตามตรรกศาสตร์
-    # รูปแบบ: (ประพจน์ MBTI) ∧ (ประพจน์ความชอบ)
-    career_rules = [
+    with st.form("mbti_form"):
+        raw_answers = {}
+        for idx, q in enumerate(COGNITIVE_QUESTIONS, 1):
+            st.markdown(f"**ข้อที่ {idx}:** {q['text']}")
+            ans = st.radio(
+                f"ระดับความตรง (ข้อ {idx}):", 
+                options=list(SCALE_OPTIONS.keys()), 
+                index=2, 
+                key=f"cog_{q['id']}",
+                horizontal=True
+            )
+            raw_answers[q['id']] = {"func": q["func"], "score": SCALE_OPTIONS[ans]}
+            st.markdown("<hr style='margin: 0.5rem 0 1.5rem 0;'>", unsafe_allow_html=True)
+            
+        submitted = st.form_submit_button("🚀 ประมวลผล MBTI")
+        
+        if submitted:
+            func_scores = {"Ne": 0, "Ni": 0, "Se": 0, "Si": 0, "Te": 0, "Ti": 0, "Fe": 0, "Fi": 0}
+            for item in raw_answers.values():
+                func_scores[item["func"]] += item["score"]
+
+            dom_func = max(func_scores, key=func_scores.get)
+            
+            possible_aux = []
+            if dom_func in ["Ne", "Se"]: possible_aux = ["Ti", "Fi"]
+            elif dom_func in ["Ni", "Si"]: possible_aux = ["Te", "Fe"]
+            elif dom_func in ["Te", "Fe"]: possible_aux = ["Ni", "Si"]
+            elif dom_func in ["Ti", "Fi"]: possible_aux = ["Ne", "Se"]
+
+            aux_func = max(possible_aux, key=lambda f: func_scores[f])
+
+            type_mapping = {
+                ("Ne", "Ti"): "ENTP", ("Ne", "Fi"): "ENFP",
+                ("Ni", "Te"): "INTJ", ("Ni", "Fe"): "INFJ",
+                ("Se", "Ti"): "ESTP", ("Se", "Fi"): "ESFP",
+                ("Si", "Te"): "ISTJ", ("Si", "Fe"): "ISFJ",
+                ("Te", "Ni"): "ENTJ", ("Te", "Si"): "ESTJ",
+                ("Ti", "Ne"): "INTP", ("Ti", "Se"): "ISTP",
+                ("Fe", "Ni"): "ENFJ", ("Fe", "Si"): "ESFJ",
+                ("Fi", "Ne"): "INFP", ("Fi", "Se"): "ISFP"
+            }
+            
+            st.session_state.mbti_result = type_mapping.get((dom_func, aux_func), "INTJ")
+            st.session_state.step = 2
+            st.rerun()
+
+# ---------------------------------------------------------
+# STEP 2: สรุปผล MBTI และกำหนดประพจน์ MBTI
+# ---------------------------------------------------------
+elif st.session_state.step == 2:
+    st.title("🌟 ขั้นตอนที่ 2: สรุปประพจน์บุคลิกภาพ (MBTI Proposition)")
+    
+    mbti = st.session_state.mbti_result
+    info = MBTI_DESCRIPTIONS.get(mbti, MBTI_DESCRIPTIONS["INTJ"])
+    
+    st.success(f"### ผลการวิเคราะห์ MBTI: **{mbti}** ({info['title']})")
+    
+    st.info(f"""
+    **📌 การกำหนดประพจน์หลัก:**
+    ให้ประพจน์ **$M_{{{mbti}}}$** แทนความหมาย: *"ผู้เรียนมีบุคลิกภาพแบบ {mbti}"* = **True (จริง)**
+    """)
+    
+    st.markdown("---")
+    if st.button("➡️ ไปต่อ: เลือกความชอบวิชาเพื่อสร้างประพจน์ความชอบ (Step 3)"):
+        st.session_state.step = 3
+        st.rerun()
+
+# ---------------------------------------------------------
+# STEP 3: ประเมินวิชาที่ชอบ และกำหนดประพจน์วิชา
+# ---------------------------------------------------------
+elif st.session_state.step == 3:
+    st.title("📚 ขั้นตอนที่ 3: สรุปประพจน์ความชอบวิชา (Subject Propositions)")
+    st.write("เลือกสเกลวิชาที่ชอบ เพื่อสรุปวิชาที่เด่นที่สุดมาตั้งเป็นประพจน์ทางตรรกศาสตร์")
+    
+    with st.form("subject_form"):
+        sub_scores = {}
+        for q in SUBJECT_QUESTIONS:
+            ans = st.radio(
+                f"วิชา: {q['text']} ({q['category']}):", 
+                options=list(SCALE_OPTIONS.keys()), 
+                index=2, 
+                key=f"sub_{q['id']}", 
+                horizontal=True
+            )
+            sub_scores[q["category"]] = sub_scores.get(q["category"], 0) + SCALE_OPTIONS[ans]
+            
+        submitted_step3 = st.form_submit_button("🚀 สรุปประพจน์ความชอบและตรวจสอบเงื่อนไข (Step 4)")
+        
+        if submitted_step3:
+            # หาวิชาที่ชอบมากที่สุดเป็นวิชาหลัก
+            sorted_subjects = sorted(sub_scores.items(), key=lambda x: x[1], reverse=True)
+            st.session_state.sub_scores = sub_scores
+            st.session_state.top_subjects = [s[0] for s in sorted_subjects[:2]] # เลือก 2 อันดับแรก
+            st.session_state.step = 4
+            st.rerun()
+
+# ---------------------------------------------------------
+# STEP 4: เชื่อมประพจน์ (AND) & ตรวจสอบเงื่อนไขคณะ/อาชีพ
+# ---------------------------------------------------------
+elif st.session_state.step == 4:
+    st.title("🎓 ขั้นตอนที่ 4: การประมวลผลตรรกศาสตร์เชื่อมประพจน์ (AND Logic)")
+    
+    mbti = st.session_state.mbti_result
+    top_subs = st.session_state.get("top_subjects", [])
+
+    # กำหนดสถานะความจริงของประพจน์วิชา
+    is_math = "Math & Logic" in top_subs or "คณิตศาสตร์/ฟิสิกส์" in top_subs
+    is_sci = "Natural Science" in top_subs or "วิทยาศาสตร์/เคมี/ชีวา" in top_subs
+    is_art = "Art & Design" in top_subs or "ศิลปะ/ออกแบบ" in top_subs
+    is_tech = "Technology" in top_subs or "คอมพิวเตอร์/เทคโนโลยี" in top_subs
+
+    st.markdown("### 1. สรุปประพจน์ทั้งหมด (Propositions Setup)")
+    
+    st.write(f"- **ประพจน์ $M_{{{mbti}}}$**: ผู้เรียนเป็นคนประเภท {mbti} = `True`")
+    st.write(f"- **ประพจน์ $P$ (ชอบคณิตศาสตร์)** = `{is_math}`")
+    st.write(f"- **ประพจน์ $Q$ (ชอบวิทยาศาสตร์)** = `{is_sci}`")
+    st.write(f"- **ประพจน์ $R$ (ชอบศิลปะ/การออกแบบ)** = `{is_art}`")
+    st.write(f"- **ประพจน์ $S$ (ชอบเทคโนโลยี/ไอที)** = `{is_tech}`")
+
+    st.markdown("---")
+    st.markdown("### 2. นิยามเงื่อนไขทางตรรกศาสตร์ของแต่ละคณะ (Logical Rules for Faculties)")
+    
+    # ---------------------------------------------------------
+    # ตารางเงื่อนไขการเชื่อมประพจน์ด้วย "และ" (AND Logic)
+    # ---------------------------------------------------------
+    faculties_rules = [
         {
-            "faculty": "คณะวิทยาศาสตร์ / คณะวิศวกรรมศาสตร์",
-            "careers": "นักวิจัย, วิศวกร, นักวิทยาศาสตร์ข้อมูล (Data Scientist)",
-            "condition": (mbti_prop["INTJ"] or mbti_prop["INTP"] or mbti_prop["ENTJ"] or mbti_prop["ISTP"]) and (P_math and P_sci),
-            "logic_symbol": "(INTJ \\lor INTP \\lor ENTJ \\lor ISTP) \\land (p_2 \\land p_1)"
+            "faculty": "คณะวิทยาศาสตร์ / วิทยาศาสตร์ข้อมูล",
+            "condition_symbol": r"M_{INTJ} \land P \land Q",
+            "eval": (mbti == "INTJ") and is_math and is_sci,
+            "rule_desc": "ต้องเป็น INTJ AND ชอบคณิต (P) AND ชอบวิทย์ (Q)"
         },
         {
-            "faculty": "คณะเทคโนโลยีสารสนเทศ (IT / Computer Science)",
-            "careers": "นักพัฒนาระบบ (Developer), นักวิเคราะห์ระบบ, UX/UI Engineer",
-            "condition": (mbti_prop["INTJ"] or mbti_prop["INTP"] or mbti_prop["ENTP"] or mbti_prop["ISTP"]) and P_math,
-            "logic_symbol": "(INTJ \\lor INTP \\lor ENTP \\lor ISTP) \\land p_2"
+            "faculty": "คณะวิศวกรรมศาสตร์ / เทคโนโลยีคอมพิวเตอร์",
+            "condition_symbol": r"(M_{INTJ} \lor M_{INTP} \lor M_{ENTP}) \land P \land S",
+            "eval": (mbti in ["INTJ", "INTP", "ENTP"]) and is_math and is_tech,
+            "rule_desc": "ต้องเป็น (INTJ OR INTP OR ENTP) AND ชอบคณิต (P) AND ชอบเทคโนโลยี (S)"
         },
         {
-            "faculty": "คณะจิตวิทยา / คณะมนุษยศาสตร์",
-            "careers": "นักจิตวิทยาปรึกษา, นักวิจัยพฤติกรรม, ที่ปรึกษาองค์กร",
-            "condition": (mbti_prop["INFJ"] or mbti_prop["INFP"] or mbti_prop["ENFJ"] or mbti_prop["ISFJ"]) and (P_sci or P_social),
-            "logic_symbol": "(INFJ \\lor INFP \\lor ENFJ \\lor ISFJ) \\land (p_1 \\lor p_5)"
+            "faculty": "คณะแพทยศาสตร์ / จิตวิทยาคลินิก",
+            "condition_symbol": r"(M_{INFJ} \lor M_{INTJ}) \land Q",
+            "eval": (mbti in ["INFJ", "INTJ"]) and is_sci,
+            "rule_desc": "ต้องเป็น (INFJ OR INTJ) AND ชอบวิทย์ (Q)"
         },
         {
-            "faculty": "คณะสถาปัตยกรรมศาสตร์ / การออกแบบดิจิทัล",
-            "careers": "สถาปนิก, นักออกแบบผลิตภัณฑ์, UX/UI Designer",
-            "condition": (mbti_prop["INTJ"] or mbti_prop["INFP"] or mbti_prop["ISFP"] or mbti_prop["ENTP"]) and P_art,
-            "logic_symbol": "(INTJ \\lor INFP \\lor ISFP \\lor ENTP) \\land p_3"
-        },
-        {
-            "faculty": "คณะอักษรศาสตร์ / ศิลปศาสตร์",
-            "careers": "นักแปล, นักเขียน, Content Creator, นักการทูต",
-            "condition": (mbti_prop["INFJ"] or mbti_prop["INFP"] or mbti_prop["ENFP"] or mbti_prop["ISFJ"]) and P_lang,
-            "logic_symbol": "(INFJ \\lor INFP \\lor ENFP \\lor ISFJ) \\land p_4"
-        },
-        {
-            "faculty": "คณะบริหารธุรกิจ / พาณิชยศาสตร์และการบัญชี",
-            "careers": "นักบริหารโครงการ, นักการตลาด, ผู้ประกอบการ, นักวิเคราะห์การเงิน",
-            "condition": (mbti_prop["ENTJ"] or mbti_prop["ESTJ"] or mbti_prop["ENFJ"] or mbti_prop["ENTP"]) and P_social,
-            "logic_symbol": "(ENTJ \\lor ESTJ \\lor ENFJ \\lor ENTP) \\land p_5"
-        },
-        {
-            "faculty": "คณะนิเทศศาสตร์ / สื่อมวลชน",
-            "careers": "ผู้กำกับ, นักประชาสัมพันธ์, นักจัดกิจกรรม (Event Planner)",
-            "condition": (mbti_prop["ENFP"] or mbti_prop["ESFP"] or mbti_prop["ENTP"] or mbti_prop["ESTP"]) and (P_art or P_lang),
-            "logic_symbol": "(ENFP \\lor ESFP \\lor ENTP \\lor ESTP) \\land (p_3 \\lor p_4)"
+            "faculty": "คณะศิลปกรรมศาสตร์ / UX-UI Design",
+            "condition_symbol": r"(M_{INFP} \lor M_{ISFP} \lor M_{ENTP}) \land R",
+            "eval": (mbti in ["INFP", "ISFP", "ENTP"]) and is_art,
+            "rule_desc": "ต้องเป็น (INFP OR ISFP OR ENTP) AND ชอบศิลปะ (R)"
         }
     ]
 
-    # กรองเฉพาะคณะที่ผลลัพธ์ประพจน์เป็น จริง (True)
-    matched_results = [rule for rule in career_rules if rule["condition"]]
+    matched_faculties = []
 
-    if matched_results:
-        st.subheader(f"พบ {len(matched_results)} คณะ/สายงานที่ตรงตามเงื่อนไขตรรกศาสตร์ของคุณ:")
+    for item in faculties_rules:
+        st.markdown(f"#### 🏛️ {item['faculty']}")
+        st.latex(rf"\text{{เงื่อนไข: }} {item['condition_symbol']}")
+        st.write(f"คำอธิบายเงื่อนไข: {item['rule_desc']}")
         
-        for index, item in enumerate(matched_results, start=1):
-            with st.expander(f"📌 {index}. {item['faculty']}", expanded=True):
-                st.write(f"**อาชีพที่แนะนำ:** {item['careers']}")
-                st.info(f"**สูตรตรรกศาสตร์ที่ตรงเงื่อนไข:** ${item['logic_symbol']} \\equiv \\text{{True}}$")
+        if item['eval']:
+            st.success("ผลลัพธ์ทางตรรกศาสตร์: **TRUE (จริง - ตรงตามเงื่อนไขเข้าคณะนี้ได้)**")
+            matched_faculties.append(item['faculty'])
+        else:
+            st.error("ผลลัพธ์ทางตรรกศาสตร์: **FALSE (เท็จ - ไม่ตรงตามเงื่อนไข)**")
+        st.markdown("<hr style='margin: 0.5rem 0;'>", unsafe_allow_html=True)
+
+    # ---------------------------------------------------------
+    # 3. สรุปคณะที่สอบผ่านเงื่อนไขตรรกศาสตร์
+    # ---------------------------------------------------------
+    st.markdown("---")
+    st.subheader("🎯 สรุปผลคณะและอาชีพที่ตรงตามเงื่อนไขตรรกศาสตร์ของคุณ")
+    
+    if matched_faculties:
+        st.balloons()
+        for fac in matched_faculties:
+            st.markdown(f"- ✅ **{fac}**")
     else:
-        st.error("❌ ไม่พบคณะที่ตรงตามเงื่อนไขตรรกศาสตร์ที่กำหนด ลองปรับเลือกความชอบเพิ่มเติม")
+        st.warning("ยังไม่พบคณะที่ตรงตามเงื่อนไขตรรกศาสตร์แบบสมบูรณ์ (ลองปรับเปลี่ยนการประเมินวิชาที่ชอบใน Step 3)")
+
+    st.markdown("---")
+    if st.button("🔄 เริ่มทำแบบประเมินใหม่"):
+        st.session_state.step = 1
+        st.rerun()
