@@ -2,6 +2,9 @@ import streamlit as st
 from questions import (
     COGNITIVE_QUESTIONS, 
     SUBJECT_QUESTIONS, 
+    HOBBY_QUESTIONS, 
+    GOAL_QUESTIONS, 
+    FINANCIAL_QUESTIONS, 
     MBTI_DESCRIPTIONS
 )
 
@@ -21,8 +24,8 @@ if 'step' not in st.session_state:
     st.session_state.step = 1
 if 'mbti_result' not in st.session_state:
     st.session_state.mbti_result = "INTJ"
-if 'top_subjects' not in st.session_state:
-    st.session_state.top_subjects = []
+if 'category_scores' not in st.session_state:
+    st.session_state.category_scores = {}
 
 SCALE_OPTIONS = {
     "1 - ไม่ตรงเลย": 1,
@@ -42,18 +45,19 @@ if st.session_state.step == 1:
     with st.form("mbti_form"):
         raw_answers = {}
         for idx, q in enumerate(COGNITIVE_QUESTIONS, 1):
+            q_id = q.get('id', idx)
             st.markdown(f"**ข้อที่ {idx}:** {q['text']}")
             ans = st.radio(
                 f"ระดับความตรง (ข้อ {idx}):", 
                 options=list(SCALE_OPTIONS.keys()), 
                 index=2, 
-                key=f"cog_{q.get('id', idx)}",
+                key=f"cog_{q_id}",
                 horizontal=True
             )
-            raw_answers[q.get('id', idx)] = {"func": q["func"], "score": SCALE_OPTIONS[ans]}
+            raw_answers[q_id] = {"func": q["func"], "score": SCALE_OPTIONS[ans]}
             st.markdown("<hr style='margin: 0.5rem 0 1.5rem 0;'>", unsafe_allow_html=True)
             
-        submitted = st.form_submit_button("🚀 ประมวลผล MBTI")
+        submitted = st.form_submit_button("🚀 ประมวลผล MBTI (ไปขั้นตอนที่ 2)")
         
         if submitted:
             func_scores = {"Ne": 0, "Ni": 0, "Se": 0, "Si": 0, "Te": 0, "Ti": 0, "Fe": 0, "Fi": 0}
@@ -148,153 +152,174 @@ elif st.session_state.step == 2:
     if stack:
         dom = stack['Dom']
         aux = stack['Aux']
-        tert = stack['Tert']
-        inf = stack['Inf']
         aux_str = ", ".join(possible_aux)
-        aux_set_display = "{" + aux_str + "}"
 
-        with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)", expanded=True):
-            st.markdown("### 1. การกำหนดประพจน์พื้นฐาน (Propositions Setup)")
-            st.write(f"* **ประพจน์ $A$**: {dom} เป็นฟังก์ชันที่มีคะแนนสูงที่สุดในทุกฟังก์ชัน `(True)`")
-            st.write(f"* **ประพจน์ $B$**: {aux} เป็นฟังก์ชันที่มีคะแนนสูงที่สุดในกลุ่ม {aux_set_display} `(True)`")
-            st.write(f"* **ประพจน์ $M_{{{mbti}}}$**: ผู้เรียนมีบุคลิกภาพแบบ {mbti} `(True)`")
-            
-            st.markdown("---")
-            st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการตัดสิน Dominant (ฟังก์ชันหลัก)")
-            st.latex(rf"A \iff (\text{{Dom}} = \text{{{dom}}})")
-            st.caption(f"อธิบาย: ประพจน์ A เป็นจริง ก็ต่อเมื่อ กำหนดให้ Dominant Function คือ {dom}")
-
-            st.markdown("---")
-            st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง) และการตัดสินประเภท")
-            st.latex(rf"B \iff (\text{{Aux}} = \text{{{aux}}})")
-            st.caption(f"อธิบาย: ประพจน์ B เป็นจริง ก็ต่อเมื่อ กำหนดให้ Auxiliary Function คือ {aux}")
-
-            st.markdown(f"**เงื่อนไขประพจน์สรุปประเภท {mbti}:**")
+        with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ", expanded=True):
+            st.markdown("### 1. การกำหนดประพจน์พื้นฐาน")
+            st.write(f"* **ประพจน์ $A$**: {dom} เป็นฟังก์ชันที่มีคะแนนสูงที่สุด `(True)`")
+            st.write(f"* **ประพจน์ $B$**: {aux} เป็นฟังก์ชันรองที่มีคะแนนสูงสุดในกลุ่ม {{{aux_str}}} `(True)`")
+            st.write(f"* **ประพจน์ $M_{{{mbti}}}$**: สรุปว่าเป็นบุคลิกภาพ {mbti} `(True)`")
             st.latex(rf"(A \land B) \implies M_{{{mbti}}}")
-            st.write(f"* **สรุปตรรกศาสตร์:** (ประพจน์ $A$ เป็นจริง) $\\land$ (ประพจน์ $B$ เป็นจริง) $\\implies$ สรุปว่าเป็นประพจน์ **$M_{{{mbti}}}$**")
-
-            st.markdown("---")
-            st.markdown("### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ $\iff$)")
-            st.latex(rf"(\text{{Dom}} = \text{{{dom}}}) \iff (\text{{Inferior}} = \text{{{inf}}})")
-            st.latex(rf"(\text{{Aux}} = \text{{{aux}}}) \iff (\text{{Tertiary}} = \text{{{tert}}})")
 
     st.markdown("---")
-    if st.button("➡️ ไปต่อ: เลือกความชอบวิชาเพื่อสร้างประพจน์ความชอบ (Step 3)"):
+    if st.button("➡️ ไปต่อ: ประเมินความชอบ 5 หมวดหมู่ (Step 3)"):
         st.session_state.step = 3
         st.rerun()
 
 # ---------------------------------------------------------
-# STEP 3: ประเมินวิชาที่ชอบ และกำหนดประพจน์วิชา (ปรับปรุงให้อัปเดตตาม questions.py เสมอ)
+# STEP 3: ประเมินความชอบ 5 หมวดหมู่ (วิชา, งานอดิเรก, เป้าหมาย, การเงิน)
 # ---------------------------------------------------------
 elif st.session_state.step == 3:
-    st.title("📚 ขั้นตอนที่ 3: สรุปประพจน์ความชอบวิชา (Subject Propositions)")
-    st.write("เลือกสเกลวิชาที่ชอบ เพื่อสรุปวิชาที่เด่นที่สุดมาตั้งเป็นประพจน์ทางตรรกศาสตร์")
+    st.title("📚 ขั้นตอนที่ 3: ประเมินความชอบและศักยภาพ 5 หมวดหมู่")
+    st.write("กรุณาทำแบบประเมินให้ครบทั้ง 5 หมวด เพื่อนำไปสรุปเป็นประพจน์ทางตรรกศาสตร์")
     
-    with st.form("subject_form"):
-        sub_scores = {}
-        for idx, q in enumerate(SUBJECT_QUESTIONS, 1):
-            q_id = q.get('id', idx)
-            st.markdown(f"**ข้อที่ {idx}:** {q['text']} *(หมวด: {q['category']})*")
-            ans = st.radio(
-                f"ระดับความตรง ({q_id}):", 
-                options=list(SCALE_OPTIONS.keys()), 
-                index=2, 
-                key=f"sub_{q_id}", 
-                horizontal=True
-            )
-            sub_scores[q["category"]] = sub_scores.get(q["category"], 0) + SCALE_OPTIONS[ans]
-            st.markdown("<hr style='margin: 0.3rem 0 1rem 0;'>", unsafe_allow_html=True)
-            
-        submitted_step3 = st.form_submit_button("🚀 สรุปประพจน์ความชอบและตรวจสอบเงื่อนไข (Step 4)")
+    # รวมชุดคำถามจาก 5 หมวด
+    all_question_sets = [
+        ("📖 1. วิชาความรู้ (Subject Knowledge)", SUBJECT_QUESTIONS, "sub"),
+        ("🎨 2. งานอดิเรกและความสนใจ (Hobbies & Interests)", HOBBY_QUESTIONS, "hobby"),
+        ("🎯 3. เป้าหมายอาชีพและค่านิยม (Career Goals)", GOAL_QUESTIONS, "goal"),
+        ("💰 4. การบริหารและการเงิน (Financial & Management)", FINANCIAL_QUESTIONS, "fin")
+    ]
+    
+    with st.form("all_categories_form"):
+        category_scores = {}
+        
+        for tab_name, questions_list, prefix in all_question_sets:
+            st.subheader(tab_name)
+            for idx, q in enumerate(questions_list, 1):
+                q_id = q.get('id', f"{prefix}_{idx}")
+                category = q.get('category', 'ทั่วไป')
+                
+                st.markdown(f"**ข้อที่ {idx}:** {q['text']} *(หมวด: {category})*")
+                ans = st.radio(
+                    f"ระดับความตรง ({q_id}):", 
+                    options=list(SCALE_OPTIONS.keys()), 
+                    index=2, 
+                    key=f"{prefix}_{q_id}", 
+                    horizontal=True
+                )
+                category_scores[category] = category_scores.get(category, 0) + SCALE_OPTIONS[ans]
+                st.markdown("<hr style='margin: 0.2rem 0 0.8rem 0;'>", unsafe_allow_html=True)
+            st.markdown("---")
+
+        submitted_step3 = st.form_submit_button("🚀 สรุปประพจน์และประมวลผลหาคณะ/อาชีพ (Step 4)")
         
         if submitted_step3:
-            sorted_subjects = sorted(sub_scores.items(), key=lambda x: x[1], reverse=True)
-            st.session_state.sub_scores = sub_scores
-            # เก็บหมวดวิชาที่ได้คะแนนสูงสุด 2 อันดับแรก
-            st.session_state.top_subjects = [s[0] for s in sorted_subjects[:2]]
+            st.session_state.category_scores = category_scores
             st.session_state.step = 4
             st.rerun()
 
 # ---------------------------------------------------------
-# STEP 4: เชื่อมประพจน์ (AND) & ตรวจสอบเงื่อนไขคณะ/อาชีพ
+# STEP 4: เชื่อมประพจน์ (AND/OR Logic) & ตรวจสอบเงื่อนไขคณะ/อาชีพ
 # ---------------------------------------------------------
 elif st.session_state.step == 4:
-    st.title("🎓 ขั้นตอนที่ 4: การประมวลผลตรรกศาสตร์เชื่อมประพจน์ (AND Logic)")
+    st.title("🎓 ขั้นตอนที่ 4: ประมวลผลตรรกศาสตร์เชื่อมประพจน์และสรุปคณะ/อาชีพ")
     
     mbti = st.session_state.mbti_result
-    top_subs = st.session_state.get("top_subjects", [])
+    cat_scores = st.session_state.get("category_scores", {})
 
-    # ฟังก์ชันช่วยตรวจเช็กหมวดวิชาแบบรองรับทั้งคำไทยและคำอังกฤษ
-    def check_subject(keywords, target_list):
-        return any(any(kw.lower() in sub.lower() for kw in keywords) for sub in target_list)
+    # ฟังก์ชันช่วยเช็กคะแนนในแต่ละหมวดว่าสูงกว่าเกณฑ์ปานกลางไหม (คะแนนเฉลี่ย >= 3 ต่อข้อ)
+    def is_category_high(keywords):
+        for cat, score in cat_scores.items():
+            if any(kw.lower() in cat.lower() for kw in keywords):
+                if score >= 6: # มีความสนใจในระดับปานกลางขึ้นไป
+                    return True
+        return False
 
-    is_math = check_subject(["math", "คณิต"], top_subs)
-    is_sci = check_subject(["science", "วิทย์", "ชีว", "เคมี"], top_subs)
-    is_art = check_subject(["art", "ศิลปะ", "ออกแบบ", "design"], top_subs)
-    is_tech = check_subject(["tech", "คอมพิวเตอร์", "เทคโนโลยี", "it"], top_subs)
+    # กำหนดประพจน์หลักตามหมวดหมู่
+    is_math_sci = is_category_high(["math", "คณิต", "science", "วิทย์", "ฟิสิกส์", "เคมี", "ชีว"])
+    is_tech = is_category_high(["tech", "คอมพิวเตอร์", "เทคโนโลยี", "it", "coding", "นวัตกรรม"])
+    is_art_design = is_category_high(["art", "ศิลปะ", "ออกแบบ", "design", "สร้างสรรค์", "บันเทิง"])
+    is_biz_finance = is_category_high(["finance", "การเงิน", "ธุรกิจ", "การบริหาร", "การลงทุน", "การตลาด", "การค้า"])
+    is_social_people = is_category_high(["social", "สังคม", "ภาษา", "จิตวิทยา", "การบริการ", "การสื่อสาร", "บริหารคน"])
 
-    st.markdown("### 1. สรุปประพจน์ทั้งหมด (Propositions Setup)")
-    st.write(f"- **ประพจน์ $M_{{{mbti}}}$**: ผู้เรียนเป็นคนประเภท {mbti} = `True`")
-    st.write(f"- **ประพจน์ $P$ (ชอบคณิตศาสตร์)** = `{is_math}`")
-    st.write(f"- **ประพจน์ $Q$ (ชอบวิทยาศาสตร์)** = `{is_sci}`")
-    st.write(f"- **ประพจน์ $R$ (ชอบศิลปะ/การออกแบบ)** = `{is_art}`")
-    st.write(f"- **ประพจน์ $S$ (ชอบเทคโนโลยี/ไอที)** = `{is_tech}`")
+    st.markdown("### 1. สรุปประพจน์ความสนใจและศักยภาพ (Propositions Setup)")
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        st.write(f"- **ประพจน์ $M_{{{mbti}}}$**: บุคลิกภาพแบบ {mbti} = `True`")
+        st.write(f"- **ประพจน์ $P$ (สนใจสายวิทยาศาสตร์/คณิตศาสตร์)** = `{is_math_sci}`")
+        st.write(f"- **ประพจน์ $Q$ (สนใจเทคโนโลยี/ไอที/นวัตกรรม)** = `{is_tech}`")
+    with col_p2:
+        st.write(f"- **ประพจน์ $R$ (สนใจศิลปะ/การออกแบบ/งานสร้างสรรค์)** = `{is_art_design}`")
+        st.write(f"- **ประพจน์ $S$ (สนใจบริหาร/การเงิน/ธุรกิจ)** = `{is_biz_finance}`")
+        st.write(f"- **ประพจน์ $T$ (สนใจมนุษยศาสตร์/สังคม/จิตวิทยา/ภาษา)** = `{is_social_people}`")
 
     st.markdown("---")
-    st.markdown("### 2. นิยามเงื่อนไขทางตรรกศาสตร์ของแต่ละคณะ (Logical Rules for Faculties)")
+    st.markdown("### 2. ตรวจสอบเงื่อนไขทางตรรกศาสตร์ของแต่ละสายคณะและอาชีพ")
     
+    # นิยามเงื่อนไขตรรกศาสตร์ครอบคลุมทุกสายอาชีพ
     faculties_rules = [
         {
-            "faculty": "คณะวิทยาศาสตร์ / วิทยาศาสตร์ข้อมูล",
-            "condition_symbol": r"M_{INTJ} \land P \land Q",
-            "eval": (mbti == "INTJ") and is_math and is_sci,
-            "rule_desc": "ต้องเป็น INTJ AND ชอบคณิต (P) AND ชอบวิทย์ (Q)"
+            "faculty": "🏛️ คณะวิศวกรรมศาสตร์ / เทคโนโลยีสารสนเทศ (Engineers & Developers)",
+            "condition_symbol": r"(M_{INTJ} \lor M_{INTP} \lor M_{ENTP} \lor M_{ISTP}) \land Q \land (P \lor S)",
+            "eval": (mbti in ["INTJ", "INTP", "ENTP", "ISTP"]) and is_tech and (is_math_sci or is_biz_finance),
+            "rule_desc": "ต้องเป็น (INTJ, INTP, ENTP, ISTP) AND สนใจเทคโนโลยี (Q) AND (สนใจวิทย์/คณิต หรือ การเงิน)",
+            "careers": "วิศวกรซอฟต์แวร์, นักพัฒนาระบบ, Data Scientist, วิศวกรเครือข่าย"
         },
         {
-            "faculty": "คณะวิศวกรรมศาสตร์ / เทคโนโลยีคอมพิวเตอร์",
-            "condition_symbol": r"(M_{INTJ} \lor M_{INTP} \lor M_{ENTP}) \land P \land S",
-            "eval": (mbti in ["INTJ", "INTP", "ENTP"]) and is_math and is_tech,
-            "rule_desc": "ต้องเป็น (INTJ OR INTP OR ENTP) AND ชอบคณิต (P) AND ชอบเทคโนโลยี (S)"
+            "faculty": "🏛️ คณะแพทยศาสตร์ / เภสัชศาสตร์ / จิตวิทยาคลินิก (Healthcare & Medical Sciences)",
+            "condition_symbol": r"(M_{INFJ} \lor M_{INTJ} \lor M_{ISFJ} \lor M_{ENFJ}) \land P \land T",
+            "eval": (mbti in ["INFJ", "INTJ", "ISFJ", "ENFJ"]) and is_math_sci and is_social_people,
+            "rule_desc": "ต้องเป็น (INFJ, INTJ, ISFJ, ENFJ) AND สนใจวิทย์ (P) AND สนใจสังคม/ช่วยเหลือคน (T)",
+            "careers": "แพทย์, เภสัชกร, นักจิตวิทยาคลินิก, นักวิจัยทางแพทย์"
         },
         {
-            "faculty": "คณะแพทยศาสตร์ / จิตวิทยาคลินิก",
-            "condition_symbol": r"(M_{INFJ} \lor M_{INTJ}) \land Q",
-            "eval": (mbti in ["INFJ", "INTJ"]) and is_sci,
-            "rule_desc": "ต้องเป็น (INFJ OR INTJ) AND ชอบวิทย์ (Q)"
+            "faculty": "🏛️ คณะบริหารธุรกิจ / เศรษฐศาสตร์ / การบัญชีและการเงิน (Business & Finance)",
+            "condition_symbol": r"(M_{ENTJ} \lor M_{ESTJ} \lor M_{ESTP} \lor M_{ENTP}) \land S",
+            "eval": (mbti in ["ENTJ", "ESTJ", "ESTP", "ENTP"]) and is_biz_finance,
+            "rule_desc": "ต้องเป็น (ENTJ, ESTJ, ESTP, ENTP) AND สนใจธุรกิจและการเงิน (S)",
+            "careers": "นักลงทุน, ผู้ประกอบการ, นักวิเคราะห์การเงิน, ผู้จัดการฝ่ายกลยุทธ์"
         },
         {
-            "faculty": "คณะศิลปกรรมศาสตร์ / UX-UI Design",
-            "condition_symbol": r"(M_{INFP} \lor M_{ISFP} \lor M_{ENTP}) \land R",
-            "eval": (mbti in ["INFP", "ISFP", "ENTP"]) and is_art,
-            "rule_desc": "ต้องเป็น (INFP OR ISFP OR ENTP) AND ชอบศิลปะ (R)"
+            "faculty": "🏛️ คณะศิลปกรรมศาสตร์ / UX-UI Design / สื่อดิจิทัล (Arts & Creative Design)",
+            "condition_symbol": r"(M_{INFP} \lor M_{ISFP} \lor M_{ENFP} \lor M_{ENTP}) \land R",
+            "eval": (mbti in ["INFP", "ISFP", "ENFP", "ENTP"]) and is_art_design,
+            "rule_desc": "ต้องเป็น (INFP, ISFP, ENFP, ENTP) AND สนใจงานศิลป์/สร้างสรรค์ (R)",
+            "careers": "UX/UI Designer, กราฟิกดีไซเนอร์, ครีเอทีฟ, แอนิเมเตอร์"
+        },
+        {
+            "faculty": "🏛️ คณะนิเทศศาสตร์ / อักษรศาสตร์ / การตลาดและสื่อสาร (Communications & Media)",
+            "condition_symbol": r"(M_{ENFP} \lor M_{ESFP} \lor M_{ENFJ} \lor M_{ENTP}) \land (R \lor S \lor T)",
+            "eval": (mbti in ["ENFP", "ESFP", "ENFJ", "ENTP"]) and (is_art_design or is_biz_finance or is_social_people),
+            "rule_desc": "ต้องเป็น (ENFP, ESFP, ENFJ, ENTP) AND (สนใจศิลป์ หรือ ธุรกิจ หรือ สื่อสารสังคม)",
+            "careers": "นักการตลาดดิจิทัล, PR Manager, นักเขียน/นักคอนเทนต์, ผู้จัดรายการ"
+        },
+        {
+            "faculty": "🏛️ คณะนิติศาสตร์ / รัฐศาสตร์ / สังคมสงเคราะห์ (Law & Public Administration)",
+            "condition_symbol": r"(M_{ISTJ} \lor M_{ESTJ} \lor M_{INTJ} \lor M_{ENFJ}) \land T",
+            "eval": (mbti in ["ISTJ", "ESTJ", "INTJ", "ENFJ"]) and is_social_people,
+            "rule_desc": "ต้องเป็น (ISTJ, ESTJ, INTJ, ENFJ) AND สนใจสังคม/กฎหมาย/การเมือง (T)",
+            "careers": "ทนายความ, ผู้พิพากษา, นักการเมือง, นักการทูต, ข้าราชการบริหาร"
         }
     ]
 
     matched_faculties = []
 
     for item in faculties_rules:
-        st.markdown(f"#### 🏛️ {item['faculty']}")
+        st.markdown(f"#### {item['faculty']}")
         st.latex(rf"\text{{เงื่อนไข: }} {item['condition_symbol']}")
-        st.write(f"คำอธิบายเงื่อนไข: {item['rule_desc']}")
+        st.write(f"**คำอธิบายเงื่อนไข:** {item['rule_desc']}")
+        st.write(f"**อาชีพที่แนะนำ:** {item['careers']}")
         
         if item['eval']:
-            st.success("ผลลัพธ์ทางตรรกศาสตร์: **TRUE (จริง - ตรงตามเงื่อนไขเข้าคณะนี้ได้)**")
-            matched_faculties.append(item['faculty'])
+            st.success("ผลลัพธ์ทางตรรกศาสตร์: **TRUE (จริง - ตรงตามเงื่อนไขสายนี้)**")
+            matched_faculties.append((item['faculty'], item['careers']))
         else:
             st.error("ผลลัพธ์ทางตรรกศาสตร์: **FALSE (เท็จ - ไม่ตรงตามเงื่อนไข)**")
         st.markdown("<hr style='margin: 0.5rem 0;'>", unsafe_allow_html=True)
 
     st.markdown("---")
-    st.subheader("🎯 สรุปผลคณะและอาชีพที่ตรงตามเงื่อนไขตรรกศาสตร์ของคุณ")
+    st.subheader("🎯 สรุปคณะและอาชีพที่ตรงตามเงื่อนไขตรรกศาสตร์ของคุณ")
     
     if matched_faculties:
         st.balloons()
-        for fac in matched_faculties:
-            st.markdown(f"- ✅ **{fac}**")
+        for fac_title, careers in matched_faculties:
+            st.markdown(f"- ✅ **{fac_title}**")
+            st.caption(f"  └ อาชีพที่เหมาะสม: {careers}")
     else:
-        st.warning("ยังไม่พบคณะที่ตรงตามเงื่อนไขตรรกศาสตร์แบบสมบูรณ์ (ลองปรับเปลี่ยนการประเมินวิชาที่ชอบใน Step 3)")
+        st.warning("ยังไม่พบคณะที่ตรงตามเงื่อนไขตรรกศาสตร์แบบสมบูรณ์ (ลองปรับเปลี่ยนการประเมินความชอบใน Step 3)")
 
     st.markdown("---")
-    if st.button("🔄 เริ่มทำแบบประเมินใหม่"):
+    if st.button("🔄 เริ่มทำแบบประเมินใหม่ทั้งหมด"):
         st.session_state.clear()
         st.rerun()
