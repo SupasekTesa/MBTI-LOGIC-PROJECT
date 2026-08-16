@@ -190,42 +190,36 @@ elif st.session_state.step == 2:
             st.session_state.step = 3
             st.rerun()
     # ---------------------------------------------------------
-    # แสดงตรรกศาสตร์และสูตรการคำนวณ (Mathematical Logic & Formulas)
+    # แสดงตรรกศาสตร์สไตล์ ม.4 (Propositions & Truth Logic)
     # ---------------------------------------------------------
     st.markdown("---")
-    with st.expander("📐 คลิกเพื่อดูสูตรคำนวณทางตรรกศาสตร์และกฎเกณฑ์ที่ใช้ (Logic Formulas)"):
-        st.markdown("### 1. สูตรการแปลงคะแนนเป็นเปอร์เซ็นต์ (% Score)")
-        st.latex(r"\% \text{Score}_f = \left( \frac{\sum_{i=1}^{10} S_{f,i}}{50} \right) \times 100")
-        st.caption("โดยที่ $S_{f,i}$ คือคะแนนที่ได้ในคำถามแต่ละข้อ (1-5) ของฟังก์ชัน $f$")
-
-        st.markdown("### 2. ตรรกศาสตร์การคัดเลือก Dominant & Auxiliary Function")
-        st.latex(r"\text{Dom} = \arg\max_{f \in F} (\text{Score}_f)")
-        st.caption("หาฟังก์ชันที่มีคะแนนสูงที่สุดเป็น Dominant ($F = \{Ne, Ni, Se, Si, Te, Ti, Fe, Fi\}$)")
+    with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)"):
+        st.markdown("""
+        ### 1. การกำหนดประพจน์ (Propositions)
+        * ให้ $\text{Score}(f)$ แทน คะแนนของฟังก์ชัน $f$
+        * ให้ประพจน์ $P$: *"ฟังก์ชัน $A$ มีคะแนนสูงที่สุด"*
         
-        st.latex(r"\text{Aux} = \arg\max_{f \in \text{ValidAux}(\text{Dom})} (\text{Score}_f)")
-        st.markdown("""
-        **กฎเงื่อนไขตรรกศาสตร์ (Constraint Logic Rules):**
-        * ถ้า $\text{Dom} \in \{Ne, Se\}$ แล้ว $\text{ValidAux} = \{Ti, Fi\}$ *(ต้องเป็น Introverted Judging)*
-        * ถ้า $\text{Dom} \in \{Ni, Si\}$ แล้ว $\text{ValidAux} = \{Te, Fe\}$ *(ต้องเป็น Extraverted Judging)*
-        * ถ้า $\text{Dom} \in \{Te, Fe\}$ แล้ว $\text{ValidAux} = \{Ni, Si\}$ *(ต้องเป็น Introverted Perceiving)*
-        * ถ้า $\text{Dom} \in \{Ti, Fi\}$ แล้ว $\text{ValidAux} = \{Ne, Se\}$ *(ต้องเป็น Extraverted Perceiving)*
-        """)
+        ### 2. เงื่อนไขทางตรรกศาสตร์ในการหา Dominant (ฟังก์ชันหลัก)
+        $$\text{Dom} = A \iff \forall f (\text{Score}(A) \ge \text{Score}(f))$$
+        *(แปลว่า: $A$ เป็น Dom ก็ต่อเมื่อ คะแนนของ $A$ มากกว่าหรือเท่ากับทุกฟังก์ชัน)*
 
-        st.markdown("### 3. สูตรคู่ตรงข้ามของสมอง (Opposite Mapping Matrix)")
-        st.latex(r"\text{Inf} = \text{Map}_{\text{opposite}}(\text{Dom}), \quad \text{Tert} = \text{Map}_{\text{opposite}}(\text{Aux})")
-        st.markdown("""
-        **ตารางแมปปิ้งคู่ตรงข้าม ($\text{Map}_{\text{opposite}}$):**
-        $$\begin{aligned}
-        Ne &\iff Si \\
-        Ni &\iff Se \\
-        Te &\iff Fi \\
-        Ti &\iff Fe
-        \end{aligned}$$
-        """)
+        ---
 
-        st.markdown("### 4. ฟังก์ชันจับคู่สรุปผล MBTI 16 บุคลิกภาพ")
-        st.latex(r"\text{MBTI Type} = g(\text{Dom}, \text{Aux})")
-        st.caption("ตัวอย่างเช่น: $g(Ne, Ti) = \text{ENTP}$, $g(Ne, Fi) = \text{ENFP}$, $g(Ni, Te) = \text{INTJ}$")
+        ### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง)
+        **กรณีที่ $\text{Dom} = Ne$:**
+        
+        กติกาบังคับ: $(\text{Dom} = Ne) \implies (\text{Aux} \in \{Ti, Fi\})$
+        
+        * **เงื่อนไขที่ 1:** ถ้า $(\text{Score}(Ti) > \text{Score}(Fi))$ **แล้ว** $(\text{Aux} = Ti \land \text{Type} = \text{ENTP})$
+        * **เงื่อนไขที่ 2:** ถ้า $(\text{Score}(Fi) > \text{Score}(Ti))$ **แล้ว** $(\text{Aux} = Fi \land \text{Type} = \text{ENFP})$
+
+        ---
+
+        ### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ $\iff$)
+        * $\text{Dom} = Ne \iff \text{Inferior} = Si$
+        * $\text{Aux} = Ti \iff \text{Tertiary} = Fe$
+        * $\text{Aux} = Fi \iff \text{Tertiary} = Te$
+        """)
 # ---------------------------------------------------------
 # STEP 3: ประเมินความชอบ วิชา งานอดิเรก เป้าหมาย ทุนการเงิน
 # ---------------------------------------------------------
