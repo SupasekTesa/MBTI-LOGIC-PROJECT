@@ -194,32 +194,30 @@ elif st.session_state.step == 2:
     # ---------------------------------------------------------
     st.markdown("---")
     with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)"):
-        st.markdown("""
-        ### 1. การกำหนดประพจน์ (Propositions)
-        * ให้ $\text{Score}(f)$ แทน คะแนนของฟังก์ชัน $f$
-        * ให้ประพจน์ $P$: *"ฟังก์ชัน $A$ มีคะแนนสูงที่สุด"*
+        st.markdown("### 1. การกำหนดประพจน์ (Propositions)")
+        st.write("* ให้ **Score(f)** แทน คะแนนของฟังก์ชัน f")
+        st.write("* ให้ประพจน์ **P**: *ฟังก์ชัน A มีคะแนนสูงที่สุด*")
         
-       st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการหา Dominant (ฟังก์ชันหลัก)")
+        st.markdown("---")
+
+        st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการหา Dominant (ฟังก์ชันหลัก)")
         st.latex(r"\text{Dom} = A \iff \forall f \, (\text{Score}(A) \ge \text{Score}(f))")
-        st.caption("แปลว่า: ฟังก์ชัน A จะได้เป็น Dominant ก็ต่อเมื่อ คะแนนของ A มากกว่าหรือเท่ากับคะแนนของทุกฟังก์ชัน (f)")
+        st.caption("แปลว่า: ฟังก์ชัน A จะเป็น Dominant ก็ต่อเมื่อ คะแนนของ A มากกว่าหรือเท่ากับคะแนนของทุกๆ ฟังก์ชัน (f)")
 
-        ---
+        st.markdown("---")
 
-        ### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง)
-        **กรณีที่ $\text{Dom} = Ne$:**
-        
-        กติกาบังคับ: $(\text{Dom} = Ne) \implies (\text{Aux} \in \{Ti, Fi\})$
-        
-        * **เงื่อนไขที่ 1:** ถ้า $(\text{Score}(Ti) > \text{Score}(Fi))$ **แล้ว** $(\text{Aux} = Ti \land \text{Type} = \text{ENTP})$
-        * **เงื่อนไขที่ 2:** ถ้า $(\text{Score}(Fi) > \text{Score}(Ti))$ **แล้ว** $(\text{Aux} = Fi \land \text{Type} = \text{ENFP})$
+        st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง)")
+        st.markdown("**กรณีที่ Dom = Ne:**")
+        st.latex(r"(\text{Dom} = Ne) \implies (\text{Aux} \in \{Ti, Fi\})")
+        st.write("* **เงื่อนไขที่ 1:** ถ้า `Score(Ti) > Score(Fi)` แล้ว `(Aux = Ti ∧ Type = ENTP)`")
+        st.write("* **เงื่อนไขที่ 2:** ถ้า `Score(Fi) > Score(Ti)` แล้ว `(Aux = Fi ∧ Type = ENFP)`")
 
-        ---
+        st.markdown("---")
 
-        ### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ $\iff$)
-        * $\text{Dom} = Ne \iff \text{Inferior} = Si$
-        * $\text{Aux} = Ti \iff \text{Tertiary} = Fe$
-        * $\text{Aux} = Fi \iff \text{Tertiary} = Te$
-        """)
+        st.markdown("### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ ⇔)")
+        st.latex(r"\text{Dom} = Ne \iff \text{Inferior} = Si")
+        st.latex(r"\text{Aux} = Ti \iff \text{Tertiary} = Fe")
+        st.latex(r"\text{Aux} = Fi \iff \text{Tertiary} = Te")
 # ---------------------------------------------------------
 # STEP 3: ประเมินความชอบ วิชา งานอดิเรก เป้าหมาย ทุนการเงิน
 # ---------------------------------------------------------
