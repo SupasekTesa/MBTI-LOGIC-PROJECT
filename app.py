@@ -146,44 +146,43 @@ elif st.session_state.step == 2:
     st.markdown("---")
 
     # ---------------------------------------------------------
-    # สมการตรรกศาสตร์สรุป MBTI ( Mathematical Logic Expansion )
+    # เรียกใช้งานฟังก์ชันแสดงตรรกศาสตร์ ม.4 อย่างถูกต้อง
     # ---------------------------------------------------------
-    import streamlit as st
+    if stack:
+        with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)", expanded=True):
+            st.markdown("### 1. การกำหนดประพจน์พื้นฐาน (Propositions Setup)")
+            st.write("* ให้ $\\text{Score}(f)$ แทน คะแนนของฟังก์ชัน $f \\in \\{\\text{Ne, Ni, Se, Si, Te, Ti, Fe, Fi}\\}$")
+            st.write(f"* ให้ประพจน์ **$M_{{{mbti}}}$** แทน *\"ผู้ใช้มีบุคลิกภาพแบบ {mbti}\"* (ค่าความจริง = **True**)")
+            
+            st.markdown("---")
 
-def render_mbti_logic_expander(mbti_type, dom_func, aux_func, tert_func, inf_func):
-    """ฟังก์ชันสำหรับแสดงผลตรรกศาสตร์ระดับ ม.4 ใน Streamlit"""
-    
-    with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)", expanded=True):
-        st.markdown("### 1. การกำหนดประพจน์พื้นฐาน (Propositions Setup)")
-        st.write("* ให้ $\\text{Score}(f)$ แทน คะแนนของฟังก์ชัน $f \\in \\{\\text{Ne, Ni, Se, Si, Te, Ti, Fe, Fi}\\}$")
-        st.write(f"* ให้ประพจน์ **$M_{{{mbti_type}}}$** แทน *\"ผู้ใช้มีบุคลิกภาพแบบ {mbti_type}\"* (ค่าความจริง = **True**)")
-        
-        st.markdown("---")
+            st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการหา Dominant (ฟังก์ชันหลัก)")
+            st.latex(r"\text{Dom} = A \iff \forall f \, (\text{Score}(A) \ge \text{Score}(f))")
+            st.caption(f"ผลลัพธ์ปัจจุบัน: \\text{{Dom}} = \\text{{{stack['Dom']}}} \\text{{ เป็นจริง เพราะมีคะแนนสูงที่สุดในทุกฟังก์ชัน}}")
 
-        st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการหา Dominant (ฟังก์ชันหลัก)")
-        st.latex(r"\text{Dom} = A \iff \forall f \, (\text{Score}(A) \ge \text{Score}(f))")
-        st.caption(f"ผลลัพธ์ปัจจุบัน: \\text{{Dom}} = \\text{{{dom_func}}} \\text{{ เป็นจริง เพราะมีคะแนนสูงที่สุดในทุกฟังก์ชัน}}")
+            st.markdown("---")
 
-        st.markdown("---")
+            st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง) และการตัดสินประเภท")
+            st.latex(rf"(\text{{Dom}} = \text{{{stack['Dom']}}}) \implies (\text{{Aux}} \in \text{{AllowedAux}}(\text{{{stack['Dom']}}}))")
+            
+            st.markdown(f"**เงื่อนไขการหาประเภท {mbti}:**")
+            st.latex(rf"(\text{{Dom}} = \text{{{stack['Dom']}}} \land \text{{Aux}} = \text{{{stack['Aux']}}}) \implies \text{{Type}} = \text{{{mbti}}}")
+            st.write(f"* **ประพจน์เชื่อม:** (Dom คือ `{stack['Dom']}`) $\\land$ (Aux คือ `{stack['Aux']}`) $\\implies$ สรุปว่าเป็น **{mbti}**")
 
-        st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง) และการตัดสินประเภท")
-        st.latex(rf"(\text{{Dom}} = \text{{{dom_func}}}) \implies (\text{{Aux}} \in \text{{AllowedAux}}(\text{{{dom_func}}}))")
-        
-        st.markdown(f"**เงื่อนไขการหาประเภท {mbti_type}:**")
-        st.latex(rf"(\text{{Dom}} = \text{{{dom_func}}} \land \text{{Aux}} = \text{{{aux_func}}}) \implies \text{{Type}} = \text{{{mbti_type}}}")
-        st.write(f"* **ประพจน์เชื่อม:** (Dom คือ `{dom_func}`) $\\land$ (Aux คือ `{aux_func}`) $\\implies$ สรุปว่าเป็น **{mbti_type}**")
+            st.markdown("---")
 
-        st.markdown("---")
+            st.markdown("### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ $\iff$)")
+            st.write("ฟังก์ชันคู่ตรงข้ามตามโครงสร้าง Cognitive Stack มีความสมมูลกันแบบ 2 ทาง:")
+            
+            st.latex(rf"\text{{Dom}} = \text{{{stack['Dom']}}} \iff \text{{Inferior}} = \text{{{stack['Inf']}}}")
+            st.latex(rf"\text{{Aux}} = \text{{{stack['Aux']}}} \iff \text{{Tertiary}} = \text{{{stack['Tert']}}}")
+            st.caption(f"อธิบาย: เมื่อ Dom เป็น {stack['Dom']} แล้ว Inferior จะต้องเป็น {stack['Inf']} เสมอ และเมื่อ Aux เป็น {stack['Aux']} แล้ว Tertiary จะต้องเป็น {stack['Tert']} เสมอ")
 
-        st.markdown("### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ $\iff$)")
-        st.write("ฟังก์ชันคู่ตรงข้ามตามโครงสร้าง Cognitive Stack มีความสมมูลกันแบบ 2 ทาง:")
-        
-        st.latex(rf"\text{{Dom}} = \text{{{dom_func}}} \iff \text{{Inferior}} = \text{{{inf_func}}}")
-        st.latex(rf"\text{{Aux}} = \text{{{aux_func}}} \iff \text{{Tertiary}} = \text{{{tert_func}}}")
-        st.caption(f"อธิบาย: เมื่อ Dom เป็น {dom_func} แล้ว Inferior จะต้องเป็น {inf_func} เสมอ และเมื่อ Aux เป็น {aux_func} แล้ว Tertiary จะต้องเป็น {tert_func} เสมอ")
+    st.markdown("---")
+    if st.button("➡️ ไปต่อ: เลือกความชอบวิชาเพื่อสร้างประพจน์ความชอบ (Step 3)"):
+        st.session_state.step = 3
+        st.rerun()
 
-# ตัวอย่างการเรียกใช้งานในระบบ:
-# render_mbti_logic_expander("INTJ", "Ni", "Te", "Fi", "Se")
 # ---------------------------------------------------------
 # STEP 3: ประเมินวิชาที่ชอบ และกำหนดประพจน์วิชา
 # ---------------------------------------------------------
