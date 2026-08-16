@@ -148,30 +148,42 @@ elif st.session_state.step == 2:
     # ---------------------------------------------------------
     # สมการตรรกศาสตร์สรุป MBTI ( Mathematical Logic Expansion )
     # ---------------------------------------------------------
-    st.markdown("### 📚 สมการและเงื่อนไขตรรกศาสตร์ (Mathematical Logic Rules)")
+    import streamlit as st
+
+def render_mbti_logic_expander(mbti_type, dom_func, aux_func, tert_func, inf_func):
+    """ฟังก์ชันสำหรับแสดงผลตรรกศาสตร์ระดับ ม.4 ใน Streamlit"""
     
-    st.markdown("#### 1. การกำหนดประพจน์พื้นฐาน (Proposition Definition)")
-    st.write(f"- ให้ **Score(f)** แทน คะแนนของฟังก์ชัน $f \in \{{\text{{Ne, Ni, Se, Si, Te, Ti, Fe, Fi}}\}}$")
-    st.write(f"- กำหนดประพจน์หลัก: **$M_{{{mbti}}}$** แทนความหมาย *\"ผู้ใช้มีบุคลิกภาพแบบ {mbti}\"*")
-    st.info(f"👉 **สถานะความจริง (Truth Value):** $M_{{{mbti}}} = \\text{{True}}$")
+    with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)", expanded=True):
+        st.markdown("### 1. การกำหนดประพจน์พื้นฐาน (Propositions Setup)")
+        st.write("* ให้ $\\text{Score}(f)$ แทน คะแนนของฟังก์ชัน $f \\in \\{\\text{Ne, Ni, Se, Si, Te, Ti, Fe, Fi}\\}$")
+        st.write(f"* ให้ประพจน์ **$M_{{{mbti_type}}}$** แทน *\"ผู้ใช้มีบุคลิกภาพแบบ {mbti_type}\"* (ค่าความจริง = **True**)")
+        
+        st.markdown("---")
 
-    st.markdown("#### 2. สมการตรรกศาสตร์ในการหา Dominant & Auxiliary Function")
-    st.latex(r"\text{Dom} = A \iff \forall f \, (\text{Score}(A) \ge \text{Score}(f))")
-    st.caption("อธิบาย: ฟังก์ชัน A จะเป็น Dominant ก็ต่อเมื่อ คะแนนของ A มากกว่าหรือเท่ากับคะแนนของทุกฟังก์ชัน")
+        st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการหา Dominant (ฟังก์ชันหลัก)")
+        st.latex(r"\text{Dom} = A \iff \forall f \, (\text{Score}(A) \ge \text{Score}(f))")
+        st.caption(f"ผลลัพธ์ปัจจุบัน: \\text{{Dom}} = \\text{{{dom_func}}} \\text{{ เป็นจริง เพราะมีคะแนนสูงที่สุดในทุกฟังก์ชัน}}")
 
-    st.latex(r"\text{Aux} = B \iff (B \in \text{AllowedAux}(\text{Dom})) \land \forall k \in \text{AllowedAux}(\text{Dom}) \, (\text{Score}(B) \ge \text{Score}(k))")
-    st.caption("อธิบาย: ฟังก์ชัน B จะเป็น Auxiliary ก็ต่อเมื่อ B อยู่ในกลุ่มที่เข้ากันได้กับ Dom และมีคะแนนสูงสุดในกลุ่มนั้น")
+        st.markdown("---")
 
-    st.markdown("#### 3. กฎความสมมูลตรงข้าม (Equivalence Rules ⇔)")
-    if stack:
-        st.latex(rf"\text{{Dom}} = \text{{{stack['Dom']}}} \iff \text{{Inferior}} = \text{{{stack['Inf']}}}")
-        st.latex(rf"\text{{Aux}} = \text{{{stack['Aux']}}} \iff \text{{Tertiary}} = \text{{{stack['Tert']}}}")
+        st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง) และการตัดสินประเภท")
+        st.latex(rf"(\text{{Dom}} = \text{{{dom_func}}}) \implies (\text{{Aux}} \in \text{{AllowedAux}}(\text{{{dom_func}}}))")
+        
+        st.markdown(f"**เงื่อนไขการหาประเภท {mbti_type}:**")
+        st.latex(rf"(\text{{Dom}} = \text{{{dom_func}}} \land \text{{Aux}} = \text{{{aux_func}}}) \implies \text{{Type}} = \text{{{mbti_type}}}")
+        st.write(f"* **ประพจน์เชื่อม:** (Dom คือ `{dom_func}`) $\\land$ (Aux คือ `{aux_func}`) $\\implies$ สรุปว่าเป็น **{mbti_type}**")
 
-    st.markdown("---")
-    if st.button("➡️ ไปต่อ: เลือกความชอบวิชาเพื่อสร้างประพจน์ความชอบ (Step 3)"):
-        st.session_state.step = 3
-        st.rerun()
+        st.markdown("---")
 
+        st.markdown("### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ $\iff$)")
+        st.write("ฟังก์ชันคู่ตรงข้ามตามโครงสร้าง Cognitive Stack มีความสมมูลกันแบบ 2 ทาง:")
+        
+        st.latex(rf"\text{{Dom}} = \text{{{dom_func}}} \iff \text{{Inferior}} = \text{{{inf_func}}}")
+        st.latex(rf"\text{{Aux}} = \text{{{aux_func}}} \iff \text{{Tertiary}} = \text{{{tert_func}}}")
+        st.caption(f"อธิบาย: เมื่อ Dom เป็น {dom_func} แล้ว Inferior จะต้องเป็น {inf_func} เสมอ และเมื่อ Aux เป็น {aux_func} แล้ว Tertiary จะต้องเป็น {tert_func} เสมอ")
+
+# ตัวอย่างการเรียกใช้งานในระบบ:
+# render_mbti_logic_expander("INTJ", "Ni", "Te", "Fi", "Se")
 # ---------------------------------------------------------
 # STEP 3: ประเมินวิชาที่ชอบ และกำหนดประพจน์วิชา
 # ---------------------------------------------------------
