@@ -173,7 +173,6 @@ elif st.session_state.step == 3:
     st.title("📚 ขั้นตอนที่ 3: ประเมินความชอบและศักยภาพ 5 หมวดหมู่")
     st.write("กรุณาทำแบบประเมินให้ครบทั้ง 5 หมวด เพื่อนำไปสรุปเป็นประพจน์ทางตรรกศาสตร์")
     
-    # รวมชุดคำถามจาก 5 หมวด
     all_question_sets = [
         ("📖 1. วิชาความรู้ (Subject Knowledge)", SUBJECT_QUESTIONS, "sub"),
         ("🎨 2. งานอดิเรกและความสนใจ (Hobbies & Interests)", HOBBY_QUESTIONS, "hobby"),
@@ -187,10 +186,17 @@ elif st.session_state.step == 3:
         for tab_name, questions_list, prefix in all_question_sets:
             st.subheader(tab_name)
             for idx, q in enumerate(questions_list, 1):
-                q_id = q.get('id', f"{prefix}_{idx}")
-                category = q.get('category', 'ทั่วไป')
+                # ดึงข้อมูลแบบปลอดภัย ป้องกัน KeyError
+                if isinstance(q, dict):
+                    q_text = q.get('text') or q.get('question') or str(q)
+                    category = q.get('category', 'ทั่วไป')
+                    q_id = q.get('id', f"{prefix}_{idx}")
+                else:
+                    q_text = str(q)
+                    category = 'ทั่วไป'
+                    q_id = f"{prefix}_{idx}"
                 
-                st.markdown(f"**ข้อที่ {idx}:** {q['text']} *(หมวด: {category})*")
+                st.markdown(f"**ข้อที่ {idx}:** {q_text} *(หมวด: {category})*")
                 ans = st.radio(
                     f"ระดับความตรง ({q_id}):", 
                     options=list(SCALE_OPTIONS.keys()), 
@@ -208,7 +214,6 @@ elif st.session_state.step == 3:
             st.session_state.category_scores = category_scores
             st.session_state.step = 4
             st.rerun()
-
 # ---------------------------------------------------------
 # STEP 4: เชื่อมประพจน์ (AND/OR Logic) & ตรวจสอบเงื่อนไขคณะ/อาชีพ
 # ---------------------------------------------------------
