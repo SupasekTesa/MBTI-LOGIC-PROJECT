@@ -68,12 +68,14 @@ if st.session_state.step == 1:
 
             dom_func = max(func_scores, key=func_scores.get)
             
-            possible_aux = []
-            if dom_func in ["Ne", "Se"]: possible_aux = ["Ti", "Fi"]
-            elif dom_func in ["Ni", "Si"]: possible_aux = ["Te", "Fe"]
-            elif dom_func in ["Te", "Fe"]: possible_aux = ["Ni", "Si"]
-            elif dom_func in ["Ti", "Fi"]: possible_aux = ["Ne", "Se"]
-
+            # กำหนดกลุ่มตัวเลือก Aux ตาม Dom แบบชัดเจน
+            aux_candidates_map = {
+                "Ne": ["Ti", "Fi"], "Se": ["Ti", "Fi"],
+                "Ni": ["Te", "Fe"], "Si": ["Te", "Fe"],
+                "Te": ["Ni", "Si"], "Fe": ["Ni", "Si"],
+                "Ti": ["Ne", "Se"], "Fi": ["Ne", "Se"]
+            }
+            possible_aux = aux_candidates_map.get(dom_func, ["Te", "Fe"])
             aux_func = max(possible_aux, key=lambda f: func_scores[f])
 
             opposite_map = {
@@ -88,6 +90,7 @@ if st.session_state.step == 1:
             st.session_state.func_scores = func_scores
             st.session_state.func_percentages = func_percentages
             st.session_state.sorted_funcs = sorted_funcs
+            st.session_state.possible_aux = possible_aux
             st.session_state.mbti_stack = {
                 "Dom": dom_func,
                 "Aux": aux_func,
@@ -111,7 +114,7 @@ if st.session_state.step == 1:
             st.rerun()
 
 # ---------------------------------------------------------
-# STEP 2: สรุปผล MBTI และแสดงสมการตรรกศาสตร์
+# STEP 2: สรุปผล MBTI และแสดงสมการตรรกศาสตร์ (ปรับปรุงแล้ว)
 # ---------------------------------------------------------
 elif st.session_state.step == 2:
     st.title("🌟 ขั้นตอนที่ 2: สรุปผลลัพธ์และแบบจำลองตรรกศาสตร์ MBTI")
@@ -121,6 +124,7 @@ elif st.session_state.step == 2:
     sorted_funcs = st.session_state.get("sorted_funcs", [])
     func_pct = st.session_state.get("func_percentages", {})
     stack = st.session_state.get("mbti_stack", {})
+    possible_aux = st.session_state.get("possible_aux", [])
     
     st.success(f"### ผลการวิเคราะห์ MBTI: **{mbti}** ({info['title']})")
     st.info(f"**ลักษณะตัวตน:** {info['desc']}")
@@ -146,9 +150,15 @@ elif st.session_state.step == 2:
     st.markdown("---")
 
     # ---------------------------------------------------------
-    # เรียกใช้งานฟังก์ชันแสดงตรรกศาสตร์ ม.4 อย่างถูกต้อง
+    # แสดงตรรกศาสตร์ (ระบุชื่อฟังก์ชันโดยตรง ไม่ใช้ตัวแปร A หรือ AllowedAux)
     # ---------------------------------------------------------
     if stack:
+        dom = stack['Dom']
+        aux = stack['Aux']
+        tert = stack['Tert']
+        inf = stack['Inf']
+        aux_str = ", ".join(possible_aux) # แปลงลิสต์เป็นข้อความ เช่น "Te, Fe"
+
         with st.expander("📚 คลิกเพื่อดูตรรกศาสตร์การคำนวณ (ระดับ ม.4: เรื่องประพจน์และเงื่อนไข)", expanded=True):
             st.markdown("### 1. การกำหนดประพจน์พื้นฐาน (Propositions Setup)")
             st.write("* ให้ $\\text{Score}(f)$ แทน คะแนนของฟังก์ชัน $f \\in \\{\\text{Ne, Ni, Se, Si, Te, Ti, Fe, Fi}\\}$")
@@ -157,26 +167,27 @@ elif st.session_state.step == 2:
             st.markdown("---")
 
             st.markdown("### 2. เงื่อนไขทางตรรกศาสตร์ในการหา Dominant (ฟังก์ชันหลัก)")
-            st.latex(r"\text{Dom} = A \iff \forall f \, (\text{Score}(A) \ge \text{Score}(f))")
-            st.caption(f"ผลลัพธ์ปัจจุบัน: \\text{{Dom}} = \\text{{{stack['Dom']}}} \\text{{ เป็นจริง เพราะมีคะแนนสูงที่สุดในทุกฟังก์ชัน}}")
+            st.latex(rf"\text{{Dom}} = \text{{{dom}}} \iff \forall f \, (\text{{Score}}(\text{{{dom}}}) \ge \text{{Score}}(f))")
+            st.caption(f"อธิบาย: สรุปว่า Dom คือ {dom} ก็ต่อเมื่อ คะแนนของ {dom} มากกว่าหรือเท่ากับคะแนนของทุกฟังก์ชัน (f)")
 
             st.markdown("---")
 
             st.markdown("### 3. ตรรกศาสตร์การเลือก Auxiliary (ฟังก์ชันรอง) และการตัดสินประเภท")
-            st.latex(rf"(\text{{Dom}} = \text{{{stack['Dom']}}}) \implies (\text{{Aux}} \in \text{{AllowedAux}}(\text{{{stack['Dom']}}}))")
-            
-            st.markdown(f"**เงื่อนไขการหาประเภท {mbti}:**")
-            st.latex(rf"(\text{{Dom}} = \text{{{stack['Dom']}}} \land \text{{Aux}} = \text{{{stack['Aux']}}}) \implies \text{{Type}} = \text{{{mbti}}}")
-            st.write(f"* **ประพจน์เชื่อม:** (Dom คือ `{stack['Dom']}`) $\\land$ (Aux คือ `{stack['Aux']}`) $\\implies$ สรุปว่าเป็น **{mbti}**")
+            st.latex(rf"(\text{{Dom}} = \text{{{dom}}}) \implies (\text{{Aux}} \in \{{\text{{{aux_str}}}\}})")
+            st.caption(f"อธิบาย: เมื่อ Dom คือ {dom} จะส่งผลให้ฟังก์ชัน Aux ต้องเลือกมาจากกลุ่ม \{{\\text{{{aux_str}}}\}\} เท่านั้น")
+
+            st.markdown(f"**เงื่อนไขประพจน์สรุปประเภท {mbti}:**")
+            st.latex(rf"(\text{{Dom}} = \text{{{dom}}} \land \text{{Aux}} = \text{{{aux}}}) \implies \text{{Type}} = \text{{{mbti}}}")
+            st.write(f"* **สรุปตรรกศาสตร์:** (Dom คือ `{dom}`) $\\land$ (Aux คือ `{aux}`) $\\implies$ สรุปว่าเป็น **{mbti}**")
 
             st.markdown("---")
 
             st.markdown("### 4. กฎคู่สมดุลตรงข้าม (สมมูลทางตรรกศาสตร์ $\iff$)")
             st.write("ฟังก์ชันคู่ตรงข้ามตามโครงสร้าง Cognitive Stack มีความสมมูลกันแบบ 2 ทาง:")
             
-            st.latex(rf"\text{{Dom}} = \text{{{stack['Dom']}}} \iff \text{{Inferior}} = \text{{{stack['Inf']}}}")
-            st.latex(rf"\text{{Aux}} = \text{{{stack['Aux']}}} \iff \text{{Tertiary}} = \text{{{stack['Tert']}}}")
-            st.caption(f"อธิบาย: เมื่อ Dom เป็น {stack['Dom']} แล้ว Inferior จะต้องเป็น {stack['Inf']} เสมอ และเมื่อ Aux เป็น {stack['Aux']} แล้ว Tertiary จะต้องเป็น {stack['Tert']} เสมอ")
+            st.latex(rf"\text{{Dom}} = \text{{{dom}}} \iff \text{{Inferior}} = \text{{{inf}}}")
+            st.latex(rf"\text{{Aux}} = \text{{{aux}}} \iff \text{{Tertiary}} = \text{{{tert}}}")
+            st.caption(f"อธิบาย: เมื่อ Dom เป็น {dom} แล้ว Inferior จะเป็น {inf} เสมอ และเมื่อ Aux เป็น {aux} แล้ว Tertiary จะเป็น {tert} เสมอ")
 
     st.markdown("---")
     if st.button("➡️ ไปต่อ: เลือกความชอบวิชาเพื่อสร้างประพจน์ความชอบ (Step 3)"):
